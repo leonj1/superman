@@ -3,3 +3,4 @@ dist
 pnpm-lock.yaml
 PLAN.md
 assets/hero-zones/**/*.glb
+cities/

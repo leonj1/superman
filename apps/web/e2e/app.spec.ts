@@ -32,6 +32,26 @@ test("@a11y controls are keyboard reachable and reduced motion is supported", as
   ).toBeFocused();
 });
 
+test("loads all 200 city targets and travels to a searched city", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => window.__SUPERMAN_CITY_COUNT__ === 200);
+  await page.getByRole("button", { name: "200 Cities" }).click();
+  await expect(page.getByTestId("city-catalog-count")).toHaveText(
+    "200 of 200 cities",
+  );
+  await page.getByPlaceholder("Chicago, France, Cape Town…").fill("Cape Town");
+  await expect(page.getByTestId("city-catalog-count")).toHaveText(
+    "1 of 200 cities",
+  );
+  await page.getByRole("button", { name: /Cape Town/ }).click();
+  await expect(page.getByText("Cape Town", { exact: true })).toBeVisible();
+  await page.waitForFunction(
+    () => (window.__SUPERMAN_METRICS__?.latitude ?? 0) < -33,
+  );
+});
+
 test("@visual globe shell remains stable", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("SUPERMAN")).toBeVisible();

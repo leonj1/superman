@@ -15,4 +15,5 @@ interface Window {
   __SUPERMAN_METRICS__?: import("@superman/telemetry").RendererMetrics;
   __SUPERMAN_FRAME_SAMPLES__?: number[];
   __SUPERMAN_SOURCE_STATUS__?: Record<string, string>;
+  __SUPERMAN_CITY_COUNT__?: number;
 }

@@ -17,6 +17,11 @@ The default is a credential-free, textured Natural Earth globe with a crisp proc
 
 Controls: click the world to capture the pointer; use WASD to move, mouse to look, F to take off or land, Space/Shift to rise or descend, Ctrl to boost, R to reset, and Escape to release the pointer.
 
+The in-app city catalog contains 200 verified geographic targets. Cataloged cities
+are navigation targets, not claims that high-detail art has already been licensed.
+When a city passes the acquisition and release pipeline, its immutable 3D Tiles
+package is loaded over the global layer automatically.
+
 ## Verification
 
 ```bash
@@ -25,6 +30,8 @@ pnpm test:e2e
 pnpm test:image-quality
 pnpm test:performance
 pnpm benchmark:motion
+pnpm city:verify --city all --profile catalog
+pnpm city:discover --city chicago
 ```
 
 `pnpm verify` is the deterministic merge gate. Image correctness and software-rendered frame pacing are browser-tested; final performance certification still requires the named physical-GPU workers described in [the architecture overview](./docs/architecture/README.md).
@@ -39,3 +46,5 @@ pnpm benchmark:motion
 - `packages/telemetry`: renderer metric validation and adaptive resolution.
 - `packages/world-manifest`: provenance, spatial-cell, LOD, and authority contracts.
 - `assets/hero-zones`: licensed local assets and their manifest.
+- `cities`: the 200-city catalog, per-city source ledgers, recipes, and manifests.
+- `tools/city-pipeline`: fail-closed discover/fetch/build/verify/publish workflow.

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "city": "lima",
+  "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
+  "requiredSourceRoles": [
+    "city-model",
+    "terrain",
+    "imagery",
+    "roads",
+    "water",
+    "vegetation"
+  ],
+  "targets": {
+    "metroRadiusKm": 40,
+    "coreRadiusKm": 10,
+    "minimumHeroZones": 2,
+    "format": "3d-tiles-1.1",
+    "payload": "glTF-2.0"
+  },
+  "operations": [
+    "verify-source-ledger",
+    "download-checksum-pinned-inputs",
+    "transform-to-epsg-4978",
+    "correct-vertical-datum",
+    "clip-metro-core-and-hero-zones",
+    "repair-topology-and-conflate-by-priority",
+    "generate-lod0-lod1-lod2-lod3",
+    "generate-simplified-collision",
+    "compress-meshes-and-ktx2-textures",
+    "tile-spatially-and-write-bounding-volumes",
+    "validate-and-sign-manifest"
+  ],
+  "budgets": {
+    "visibleTriangles": 8000000,
+    "drawCalls": 2000,
+    "decodedGpuMegabytes": 1536,
+    "cpuHeapMegabytes": 1024,
+    "maximumTextureDimension": 8192,
+    "minimumLodCount": 3
+  }
+}

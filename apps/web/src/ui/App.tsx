@@ -8,14 +8,17 @@ import {
   type ReactNode,
 } from "react";
 import { parseRuntimeConfig, supportsWorldExperience } from "@superman/config";
+import type { CityCatalogEntry } from "@superman/world-manifest";
 import type { WorldEngine } from "../runtime/WorldEngine";
+import { loadCityCatalog, searchCities } from "../runtime/CityCatalog";
 import { usePlayerStore } from "../runtime/playerStore";
 
-const LOCATIONS = [
-  { name: "Times Square", coordinates: [-73.9855, 40.758, 500] as const },
-  { name: "Lower Manhattan", coordinates: [-74.0134, 40.7069, 1_200] as const },
-  { name: "Central Park", coordinates: [-73.9654, 40.7829, 850] as const },
-  { name: "Mount Fuji", coordinates: [138.7274, 35.3606, 8_000] as const },
+const FEATURED_CITY_SLUGS = [
+  "new-york-city",
+  "chicago",
+  "london",
+  "paris",
+  "tokyo",
 ];
 
 export function App(): ReactNode {
@@ -54,6 +57,11 @@ function World({
   const engineRef = useRef<WorldEngine | null>(null);
   const [fatal, setFatal] = useState<string | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [cityCatalogOpen, setCityCatalogOpen] = useState(false);
+  const [cityQuery, setCityQuery] = useState("");
+  const [cities, setCities] = useState<CityCatalogEntry[]>([]);
+  const [cityCatalogError, setCityCatalogError] = useState<string | null>(null);
+  const [activeCity, setActiveCity] = useState("New York City");
   const [unsupported, setUnsupported] = useState(false);
   const {
     mode,
@@ -64,6 +72,29 @@ function World({
     sources,
     setSnapshot,
   } = usePlayerStore();
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadCityCatalog()
+      .then((catalog) => {
+        if (cancelled) return;
+        setCities(catalog.cities);
+        window.__SUPERMAN_CITY_COUNT__ = catalog.cities.length;
+      })
+      .catch((cause) => {
+        if (!cancelled) {
+          setCityCatalogError(
+            cause instanceof Error
+              ? cause.message
+              : "City catalog unavailable.",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+      window.__SUPERMAN_CITY_COUNT__ = undefined;
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -117,6 +148,18 @@ function World({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  const visitCity = (city: CityCatalogEntry) => {
+    setActiveCity(city.displayName);
+    setCityCatalogOpen(false);
+    setCityQuery("");
+    void engineRef.current?.travelToCity(city);
+  };
+
+  const visibleCities = searchCities(cities, cityQuery);
+  const featuredCities = FEATURED_CITY_SLUGS.map((slug) =>
+    cities.find((city) => city.slug === slug),
+  ).filter((city): city is CityCatalogEntry => Boolean(city));
 
   if (unsupported) {
     return (
@@ -213,6 +256,10 @@ function World({
           <span aria-hidden="true">⌨</span>
           Controls
         </button>
+        <button type="button" onClick={() => setCityCatalogOpen(true)}>
+          <span aria-hidden="true">◎</span>
+          200 Cities
+        </button>
         <button type="button" onClick={() => engineRef.current?.reset()}>
           <span aria-hidden="true">↺</span>
           Reset
@@ -222,22 +269,17 @@ function World({
 
       <section className="location-strip" aria-label="Quick travel">
         <span>EXPLORE</span>
-        {LOCATIONS.map(({ name, coordinates }) => (
-          <button
-            key={name}
-            type="button"
-            onClick={() =>
-              engineRef.current?.travelTo(
-                coordinates[0],
-                coordinates[1],
-                coordinates[2],
-              )
-            }
-          >
-            {name}
+        {featuredCities.map((city) => (
+          <button key={city.slug} type="button" onClick={() => visitCity(city)}>
+            {city.displayName}
           </button>
         ))}
       </section>
+
+      <div className="active-city" aria-live="polite">
+        <small>CITY TARGET</small>
+        <strong>{activeCity}</strong>
+      </div>
 
       {controlsOpen && (
         <section className="controls-card" role="dialog" aria-label="Controls">
@@ -281,6 +323,74 @@ function World({
               <dd>Release cursor</dd>
             </div>
           </dl>
+        </section>
+      )}
+
+      {cityCatalogOpen && (
+        <section
+          className="city-catalog"
+          role="dialog"
+          aria-label="City catalog"
+        >
+          <header>
+            <div>
+              <p className="eyebrow">PREBUILT WORLD TARGETS</p>
+              <h2>Explore 200 cities</h2>
+              <p>
+                Catalog locations are available now. High-detail packages appear
+                only after their licensed source data passes release validation.
+              </p>
+            </div>
+            <button
+              className="close"
+              aria-label="Close city catalog"
+              onClick={() => setCityCatalogOpen(false)}
+            >
+              ×
+            </button>
+          </header>
+          <label className="city-search">
+            <span>Search city or country</span>
+            <input
+              autoFocus
+              value={cityQuery}
+              onChange={(event) => setCityQuery(event.target.value)}
+              placeholder="Chicago, France, Cape Town…"
+            />
+          </label>
+          <div className="city-catalog-summary">
+            <span data-testid="city-catalog-count">
+              {visibleCities.length} of {cities.length} cities
+            </span>
+            <span>
+              {config.tileProvider === "hybrid"
+                ? "Live terrain + OSM buildings enabled"
+                : "Offline mode: location previews only"}
+            </span>
+          </div>
+          {cityCatalogError ? (
+            <p role="alert">{cityCatalogError}</p>
+          ) : (
+            <div className="city-grid">
+              {visibleCities.map((city) => (
+                <button
+                  key={city.slug}
+                  type="button"
+                  onClick={() => visitCity(city)}
+                >
+                  <span>
+                    <strong>{city.displayName}</strong>
+                    <small>{city.country}</small>
+                  </span>
+                  <em>
+                    {city.package.releaseAvailable
+                      ? "3D READY"
+                      : `PHASE ${city.phase}`}
+                  </em>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
