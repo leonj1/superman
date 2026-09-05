@@ -11,11 +11,20 @@ This repository contains an executable, credential-free hybrid vertical slice an
 - Native high-DPI framebuffer sizing, rolling p95 frame telemetry, sustained-overload/recovery hysteresis, a Manhattan resolution floor, 5 Hz UI snapshots, and schema-complete deterministic benchmark artifacts.
 - Fastify service boundary with health/readiness, authorization isolation, settings/locations contracts, validation, request IDs, payload limits, security headers, graceful shutdown, and PostGIS migration.
 - Unit, integration, browser, accessibility, visual-regression, image-quality, framebuffer, and no-choppiness suites. Negative fixtures prove blank, blurry, blocky, and janky content is rejected.
+- Ordered 200-city catalog with GeoNames coordinates, WGS84 bounds, spawns,
+  metro/core/hero boundaries, city-specific district/landmark/geography targets,
+  source leads, per-city ledgers, deterministic recipes, and fail-closed manifests.
+- Searchable in-app city browser and atomic runtime 3D Tiles handoff for packages
+  that have passed publication. Catalog-only cities are labeled honestly.
+- City CLI for discovery, checksum-pinned acquisition, build prerequisites,
+  catalog/release verification, and deployment-adapter publication.
 
 ## Requires deployment inputs or further product work
 
 - A domain-restricted Cesium ion token and protected live-provider tests.
-- Licensed, survey-accurate Manhattan hero-zone GLBs and Rapier collision proxies; the current cell is an intentionally synthetic fixture.
+- Licensed, survey-accurate source models, orthophotography, terrain, landmarks,
+  transport, and collision assets for the 200 cataloged cities; the current
+  Manhattan cell is an intentionally synthetic fixture.
 - Rapier hero-zone collision authority once those meshes exist. Streamed-world walking currently uses Cesium surface sampling and collision assistance.
 - Real authentication/database provider wiring; the API currently uses a deterministic in-memory adapter and includes the target PostGIS schema.
 - Sentry/OpenTelemetry account wiring, alert destinations, quota kill switch configuration, and private source-map upload.

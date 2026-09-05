@@ -78,3 +78,172 @@ export function authorityCount(state: CellAuthorityState): {
         collision: state === "evicting" ? 1 : 0,
       };
 }
+
+const positionSchema = z.object({
+  longitude: z.number().min(-180).max(180),
+  latitude: z.number().min(-90).max(90),
+});
+
+const ringSchema = z
+  .array(z.tuple([z.number(), z.number()]))
+  .min(4)
+  .refine(
+    (ring) =>
+      ring[0]?.[0] === ring.at(-1)?.[0] && ring[0]?.[1] === ring.at(-1)?.[1],
+    "Polygon rings must be closed.",
+  );
+
+export const cityCatalogEntrySchema = z.object({
+  phase: z.number().int().min(1).max(200),
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  displayName: z.string().min(1),
+  country: z.string().min(1),
+  countryCode: z.string().length(2),
+  geonamesId: z.number().int().positive(),
+  populationReference: z.number().int().nonnegative(),
+  center: positionSchema,
+  bounds: boundsSchema,
+  spawnPoints: z
+    .array(
+      positionSchema.extend({
+        id: z.string().min(1),
+        altitude: z.number().positive(),
+        heading: z.number(),
+        pitch: z.number().min(-90).max(90),
+      }),
+    )
+    .min(1),
+  polygons: z.object({
+    metro: ringSchema,
+    core: ringSchema,
+    hero: z.array(ringSchema).min(1),
+  }),
+  expectedDistricts: z.array(z.string()),
+  expectedLandmarks: z.array(z.string()),
+  expectedGeography: z.array(z.string()),
+  expectedWaterBodies: z.array(z.string()),
+  expectedBridges: z.array(z.string()),
+  expectedAirports: z.array(z.string()),
+  transitModes: z.array(z.enum(["roads", "rail", "water", "air"])).min(1),
+  requirements: z.object({
+    acquire: z.string().min(1),
+    detail: z.string().min(1),
+    build: z.string().min(1),
+    assertion: z.string().min(1),
+  }),
+  package: z.object({
+    status: z.enum(["cataloged", "building", "verified", "published"]),
+    releaseAvailable: z.boolean(),
+    tilesetUrl: z.string().url().nullable(),
+    releaseHash: z.string().min(8).nullable(),
+    performanceCertified: z.boolean(),
+    attribution: z.array(z.string()),
+  }),
+});
+
+export const cityCatalogSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    generatedAt: z.string().date(),
+    coordinateSource: z.object({
+      name: z.string().min(1),
+      url: z.string().url(),
+      license: z.string().min(1),
+      attribution: z.string().min(1),
+    }),
+    cities: z.array(cityCatalogEntrySchema).length(200),
+  })
+  .superRefine(({ cities }, context) => {
+    const slugs = new Set<string>();
+    for (const [index, city] of cities.entries()) {
+      if (city.phase !== index + 1) {
+        context.addIssue({
+          code: "custom",
+          path: ["cities", index, "phase"],
+          message: "City phases must be contiguous and catalog ordered.",
+        });
+      }
+      if (slugs.has(city.slug)) {
+        context.addIssue({
+          code: "custom",
+          path: ["cities", index, "slug"],
+          message: "City slugs must be unique.",
+        });
+      }
+      slugs.add(city.slug);
+      if (
+        city.package.releaseAvailable !==
+        (city.package.status === "published")
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["cities", index, "package"],
+          message: "Only published packages may be release-available.",
+        });
+      }
+    }
+  });
+
+export type CityCatalogEntry = z.infer<typeof cityCatalogEntrySchema>;
+export type CityCatalog = z.infer<typeof cityCatalogSchema>;
+
+export interface CityResidencySnapshot {
+  requested?: string;
+  warming?: string;
+  active?: string;
+  generation: number;
+}
+
+/**
+ * Models atomic city handoff without depending on Cesium. A stale download can
+ * never replace the latest requested city, and the current city remains active
+ * until its replacement is ready.
+ */
+export class CityResidencyManager {
+  private snapshotValue: CityResidencySnapshot = { generation: 0 };
+
+  request(slug: string): number {
+    const generation = this.snapshotValue.generation + 1;
+    this.snapshotValue = {
+      ...this.snapshotValue,
+      requested: slug,
+      warming: slug,
+      generation,
+    };
+    return generation;
+  }
+
+  ready(slug: string, generation: number): boolean {
+    if (
+      generation !== this.snapshotValue.generation ||
+      slug !== this.snapshotValue.requested
+    ) {
+      return false;
+    }
+    this.snapshotValue = {
+      requested: slug,
+      active: slug,
+      generation,
+    };
+    return true;
+  }
+
+  fail(slug: string, generation: number): boolean {
+    if (
+      generation !== this.snapshotValue.generation ||
+      slug !== this.snapshotValue.warming
+    ) {
+      return false;
+    }
+    this.snapshotValue = {
+      ...this.snapshotValue,
+      requested: this.snapshotValue.active,
+      warming: undefined,
+    };
+    return true;
+  }
+
+  snapshot(): CityResidencySnapshot {
+    return { ...this.snapshotValue };
+  }
+}

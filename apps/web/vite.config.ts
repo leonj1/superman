@@ -24,6 +24,10 @@ export default defineConfig({
           src: "node_modules/cesium/Build/Cesium/Widgets",
           dest: "cesium",
         },
+        {
+          src: "../../cities/catalog.json",
+          dest: "cities",
+        },
       ],
     }),
   ],

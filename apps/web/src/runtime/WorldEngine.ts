@@ -10,6 +10,7 @@ import {
 } from "cesium";
 import type { RuntimeConfig } from "@superman/config";
 import { TIMES_SQUARE_SPAWN } from "@superman/geo";
+import type { CityCatalogEntry } from "@superman/world-manifest";
 import {
   FixedStepRunner,
   canTransition,
@@ -24,6 +25,7 @@ import { QualityController } from "./QualityController";
 import { ManhattanLayer } from "./ManhattanLayer";
 import { createWorldSources, type SourceState } from "./WorldProviders";
 import { CollisionWorld, isInsideManhattanFixture } from "./CollisionWorld";
+import { CityPackageLayer } from "./CityPackageLayer";
 
 export interface EngineSnapshot {
   mode: MovementMode;
@@ -65,6 +67,7 @@ export class WorldEngine {
   private tileSet?: Cesium3DTileset;
   private manhattan?: ManhattanLayer;
   private readonly collision = new CollisionWorld();
+  private readonly cityPackages: CityPackageLayer;
   private attribution = "CesiumJS";
   private sources: EngineSnapshot["sources"] = {
     terrain: "loading",
@@ -126,6 +129,11 @@ export class WorldEngine {
     this.viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
     this.viewer.scene.fog.enabled = true;
     this.viewer.shadows = options.config.quality.shadows;
+    this.cityPackages = new CityPackageLayer(
+      this.viewer.scene,
+      options.config.quality.maximumScreenSpaceError,
+      options.config.quality.cacheMegabytes * 1024 * 1024,
+    );
     if (this.viewer.scene.skyAtmosphere) {
       this.viewer.scene.skyAtmosphere.show = options.config.quality.atmosphere;
     }
@@ -227,6 +235,7 @@ export class WorldEngine {
     if (this.tileSet)
       this.tileSet.loadProgress.removeEventListener(this.onLoadProgress);
     this.manhattan?.destroy();
+    this.cityPackages.destroy();
     this.collision.destroy();
     this.viewer.destroy();
   }
@@ -287,7 +296,21 @@ export class WorldEngine {
     const local = isInsideManhattanFixture(this.state.position);
     this.sources.manhattan = local ? "ready" : "degraded";
     this.sources.collision = local ? "ready" : "degraded";
+    this.updateReadiness();
     this.applyCamera();
+  }
+
+  async travelToCity(city: CityCatalogEntry): Promise<void> {
+    const spawn = city.spawnPoints[0];
+    if (!spawn) return;
+    this.travelTo(spawn.longitude, spawn.latitude, spawn.altitude);
+    const packageState = await this.cityPackages.load(city);
+    if (packageState === "active") {
+      this.sources.manhattan = "ready";
+      this.sources.collision = "ready";
+      this.attribution = `${this.attribution} · ${city.package.attribution.join(" · ")}`;
+    }
+    this.updateReadiness();
   }
 
   private readonly onCanvasClick = (): void => this.input.requestPointerLock();
@@ -332,11 +355,17 @@ export class WorldEngine {
     const buildingsReady =
       this.sources.buildings === "ready" ||
       this.sources.buildings === "degraded";
+    const localVisualReady =
+      this.sources.manhattan === "ready" ||
+      this.sources.manhattan === "degraded";
+    const localCollisionReady =
+      this.sources.collision === "ready" ||
+      this.sources.collision === "degraded";
     this.ready =
       this.globePending === 0 &&
       buildingsReady &&
-      this.sources.manhattan === "ready" &&
-      this.sources.collision === "ready";
+      localVisualReady &&
+      localCollisionReady;
   }
 
   private readonly tick = (now: number): void => {

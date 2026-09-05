@@ -3,6 +3,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.city-cache/
 .env
 .env.*
 !.env.example

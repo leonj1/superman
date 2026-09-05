@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "city": "zurich",
+  "phase": 67,
+  "status": "cataloged",
+  "releaseHash": null,
+  "tilesetUrl": null,
+  "content": [],
+  "sourceLineage": [
+    "geonames-2657896"
+  ],
+  "featureCounts": null,
+  "coverage": null,
+  "budgets": null,
+  "collisionHash": null,
+  "landmarkIds": [],
+  "screenshots": [],
+  "attribution": [
+    "GeoNames (https://www.geonames.org/)"
+  ],
+  "performanceCertified": false,
+  "certificationEvidence": null,
+  "visualEvidence": null,
+  "performanceEvidence": null,
+  "streamingEvidence": null,
+  "memoryEvidence": null,
+  "collisionEvidence": null,
+  "blockers": [
+    "Approved redistributable city geometry has not been acquired.",
+    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
+    "Physical-GPU performance evidence and two-person review are required."
+  ]
+}
