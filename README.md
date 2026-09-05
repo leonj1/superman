@@ -13,7 +13,7 @@ cp .env.example apps/web/.env.local
 pnpm dev
 ```
 
-The app works without credentials in a clearly labeled WGS84 preview mode. For production photorealism, enable the Google Map Tiles API, create a browser key restricted to your deployed domains, and set `VITE_GOOGLE_MAP_TILES_KEY`. Never place an unrestricted or server credential in a `VITE_` variable.
+The default is a credential-free, textured Natural Earth globe with a crisp procedural Manhattan development cell. It is intentionally a deterministic visual fixture, not survey-accurate city data. For the live hybrid world, supply a domain-restricted `VITE_CESIUM_ION_TOKEN`; the adapter loads Cesium World Terrain, Bing aerial imagery, and modeled OSM buildings. Google is retained only as an explicit comparison mode.
 
 Controls: click the world to capture the pointer; use WASD to move, mouse to look, F to take off or land, Space/Shift to rise or descend, Ctrl to boost, R to reset, and Escape to release the pointer.
 
@@ -22,10 +22,12 @@ Controls: click the world to capture the pointer; use WASD to move, mouse to loo
 ```bash
 pnpm verify
 pnpm test:e2e
+pnpm test:image-quality
+pnpm test:performance
 pnpm benchmark:motion
 ```
 
-`pnpm verify` is the deterministic merge gate. Provider smoke tests and physical GPU benchmarks require protected CI workers and credentials. See [PLAN.md](./PLAN.md) and [the architecture overview](./docs/architecture/README.md).
+`pnpm verify` is the deterministic merge gate. Image correctness and software-rendered frame pacing are browser-tested; final performance certification still requires the named physical-GPU workers described in [the architecture overview](./docs/architecture/README.md).
 
 ## Workspace
 
@@ -35,4 +37,5 @@ pnpm benchmark:motion
 - `packages/simulation`: deterministic movement and state transitions.
 - `packages/config`: runtime validation and measured quality profiles.
 - `packages/telemetry`: renderer metric validation and adaptive resolution.
+- `packages/world-manifest`: provenance, spatial-cell, LOD, and authority contracts.
 - `assets/hero-zones`: licensed local assets and their manifest.

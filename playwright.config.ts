@@ -11,7 +11,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "pnpm --filter @superman/web build && pnpm --filter @superman/web preview --host 0.0.0.0",
+      "VITE_TILE_PROVIDER=offline-fixture VITE_QUALITY_PROFILE=ultra VITE_GOOGLE_MAP_TILES_KEY= pnpm --filter @superman/web build && pnpm --filter @superman/web preview --host 0.0.0.0",
     port: 4173,
     reuseExistingServer: !process.env.CI,
   },

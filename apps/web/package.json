@@ -15,6 +15,7 @@
     "@superman/geo": "workspace:*",
     "@superman/simulation": "workspace:*",
     "@superman/telemetry": "workspace:*",
+    "@superman/world-manifest": "workspace:*",
     "cesium": "1.145.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

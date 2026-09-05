@@ -18,10 +18,16 @@ const required = [
   "triangles",
   "drawCalls",
   "lods",
+  "acquiredAt",
+  "contentHash",
+  "bounds",
+  "sourceVersion",
 ];
 for (const zone of manifest.zones) {
   for (const key of required)
     if (!(key in zone))
       throw new Error(`Hero zone ${zone.id ?? "<unknown>"} is missing ${key}.`);
 }
+if (manifest.zones.some((zone) => zone.decodedGpuMegabytes > 512))
+  throw new Error("A hero zone exceeds the High decoded GPU budget.");
 console.log(`Validated ${manifest.zones.length} licensed hero zones.`);

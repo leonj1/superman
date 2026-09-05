@@ -1,5 +1,29 @@
 {
   "schemaVersion": 1,
-  "zones": [],
+  "zones": [
+    {
+      "id": "times-square-procedural-demo",
+      "author": "Superman World contributors",
+      "license": "CC0-1.0",
+      "source": "Deterministic procedural geometry authored in this repository",
+      "allowedUse": "Redistribution, modification, and commercial use",
+      "acquiredAt": "2026-09-05",
+      "sourceVersion": "1",
+      "contentHash": "procedural-v1",
+      "bounds": {
+        "west": -73.991,
+        "south": 40.752,
+        "east": -73.98,
+        "north": 40.764
+      },
+      "decodedGpuMegabytes": 2,
+      "triangles": 1500,
+      "drawCalls": 1,
+      "lods": [
+        { "distance": 1000, "geometricError": 0 },
+        { "distance": 10000, "geometricError": 25 }
+      ]
+    }
+  ],
   "policy": "Every added source or derived asset must declare author, license, source, allowedUse, decodedGpuMegabytes, triangles, drawCalls, and lods."
 }

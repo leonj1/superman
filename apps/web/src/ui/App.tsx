@@ -55,8 +55,15 @@ function World({
   const [fatal, setFatal] = useState<string | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
-  const { mode, qualityLabel, loadingMessage, metrics, setSnapshot } =
-    usePlayerStore();
+  const {
+    mode,
+    qualityLabel,
+    loadingMessage,
+    metrics,
+    attribution,
+    sources,
+    setSnapshot,
+  } = usePlayerStore();
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -148,7 +155,9 @@ function World({
           <span className="loader" />
           <p>{loadingMessage || "Preparing Manhattan…"}</p>
           <small>
-            High-resolution geometry is required before movement unlocks.
+            {Object.entries(sources)
+              .map(([source, state]) => `${source}: ${state}`)
+              .join(" · ")}
           </small>
         </section>
       )}
@@ -179,6 +188,14 @@ function World({
           <strong>
             {Math.round(metrics?.fps ?? 0)} <em>fps</em>
           </strong>
+        </div>
+        <div>
+          <small>IMAGE</small>
+          <strong>{metrics?.worldQuality.toUpperCase() ?? "LOADING"}</strong>
+        </div>
+        <div>
+          <small>RESOLUTION</small>
+          <strong>{Math.round((metrics?.resolutionScale ?? 1) * 100)}%</strong>
         </div>
       </aside>
 
@@ -268,10 +285,7 @@ function World({
       )}
 
       <footer className="credits" data-testid="attribution">
-        CesiumJS ·{" "}
-        {config.tileProvider === "google"
-          ? "Google Photorealistic 3D Tiles"
-          : "WGS84 preview — add a restricted Google Maps Tile API key for photorealism"}
+        CesiumJS · {attribution}
       </footer>
       {fatal && <FatalScreen title="World unavailable" message={fatal} />}
     </main>

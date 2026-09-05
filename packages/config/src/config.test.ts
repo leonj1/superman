@@ -6,15 +6,28 @@ import {
 } from "./index";
 
 describe("runtime configuration", () => {
-  it("selects a safe credential-free globe by default", () => {
-    expect(parseRuntimeConfig({}).tileProvider).toBe("ellipsoid");
+  it("selects a textured credential-free fixture by default", () => {
+    expect(parseRuntimeConfig({}).tileProvider).toBe("offline-fixture");
   });
 
-  it("selects Google automatically when a public key exists", () => {
+  it("does not select legacy Google automatically when a key exists", () => {
     expect(
       parseRuntimeConfig({ VITE_GOOGLE_MAP_TILES_KEY: "public-test-key" })
         .tileProvider,
-    ).toBe("google");
+    ).toBe("offline-fixture");
+  });
+
+  it("selects the live hybrid world when an ion token exists", () => {
+    expect(
+      parseRuntimeConfig({ VITE_CESIUM_ION_TOKEN: "public-test-token" })
+        .tileProvider,
+    ).toBe("hybrid");
+  });
+
+  it("rejects explicit hybrid without an ion token", () => {
+    expect(() => parseRuntimeConfig({ VITE_TILE_PROVIDER: "hybrid" })).toThrow(
+      /required/,
+    );
   });
 
   it("rejects explicit Google without a key", () => {
@@ -29,6 +42,9 @@ describe("runtime configuration", () => {
     );
     expect(QUALITY_PROFILES.high.cacheMegabytes).toBeGreaterThan(
       QUALITY_PROFILES.safe.cacheMegabytes,
+    );
+    expect(QUALITY_PROFILES.high.minimumResolutionScale).toBeGreaterThanOrEqual(
+      0.85,
     );
   });
 

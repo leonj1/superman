@@ -21,12 +21,23 @@ import {
 import type { RendererMetrics } from "@superman/telemetry";
 import { InputController } from "./InputController";
 import { QualityController } from "./QualityController";
+import { ManhattanLayer } from "./ManhattanLayer";
+import { createWorldSources, type SourceState } from "./WorldProviders";
+import { CollisionWorld, isInsideManhattanFixture } from "./CollisionWorld";
 
 export interface EngineSnapshot {
   mode: MovementMode;
   qualityLabel: string;
   loadingMessage: string;
   metrics: RendererMetrics;
+  attribution: string;
+  sources: {
+    terrain: SourceState;
+    imagery: SourceState;
+    buildings: SourceState;
+    manhattan: SourceState;
+    collision: SourceState;
+  };
 }
 
 export interface WorldEngineOptions {
@@ -52,11 +63,23 @@ export class WorldEngine {
   private readonly quality: QualityController;
   private state: SimulationState;
   private tileSet?: Cesium3DTileset;
+  private manhattan?: ManhattanLayer;
+  private readonly collision = new CollisionWorld();
+  private attribution = "CesiumJS";
+  private sources: EngineSnapshot["sources"] = {
+    terrain: "loading",
+    imagery: "loading",
+    buildings: "loading",
+    manhattan: "loading",
+    collision: "loading",
+  };
   private animationFrame = 0;
   private lastFrameAt = performance.now();
   private lastSnapshotAt = 0;
   private pendingRequests = 0;
   private processingTiles = 0;
+  private globePending = 1;
+  private providersInitialized = false;
   private ready = false;
   private destroyed = false;
   private validPosition: SimulationState["position"];
@@ -92,6 +115,7 @@ export class WorldEngine {
       selectionIndicator: false,
       timeline: false,
       terrainProvider: new EllipsoidTerrainProvider(),
+      useBrowserRecommendedResolution: false,
       useDefaultRenderLoop: false,
       orderIndependentTranslucency: false,
     });
@@ -109,6 +133,14 @@ export class WorldEngine {
     this.input = new InputController(this.viewer.canvas);
     this.input.start();
     this.viewer.canvas.addEventListener("click", this.onCanvasClick);
+    this.viewer.canvas.addEventListener("webglcontextlost", this.onContextLost);
+    this.viewer.canvas.addEventListener(
+      "webglcontextrestored",
+      this.onContextRestored,
+    );
+    this.viewer.scene.globe.tileLoadProgressEvent.addEventListener(
+      this.onGlobeLoadProgress,
+    );
     this.applyCamera();
   }
 
@@ -126,6 +158,44 @@ export class WorldEngine {
         this.tileSet.enableCollision = true;
         this.tileSet.loadProgress.addEventListener(this.onLoadProgress);
         this.viewer.scene.primitives.add(this.tileSet);
+        this.attribution =
+          "Google Photorealistic 3D Tiles (legacy comparison mode)";
+        this.sources = {
+          terrain: "ready",
+          imagery: "ready",
+          buildings: "loading",
+          manhattan: "degraded",
+          collision: "loading",
+        };
+        this.providersInitialized = true;
+        this.globePending = 0;
+      } else {
+        const sources = await createWorldSources(this.options.config);
+        this.providersInitialized = true;
+        this.viewer.terrainProvider = sources.terrain;
+        this.viewer.imageryLayers.addImageryProvider(sources.imagery);
+        if (sources.buildings) {
+          this.tileSet = sources.buildings;
+          this.tileSet.loadProgress.addEventListener(this.onLoadProgress);
+          this.viewer.scene.primitives.add(this.tileSet);
+        }
+        this.attribution = sources.attribution;
+        if (this.options.config.tileProvider === "offline-fixture") {
+          // The packaged fixture provider resolves only after its local tile
+          // metadata is available; unlike a network provider it has no
+          // center-view request that can fail after initialization.
+          this.globePending = 0;
+        }
+        this.sources.terrain = "ready";
+        this.sources.imagery = "ready";
+        this.sources.buildings = sources.buildings ? "loading" : "degraded";
+        this.manhattan = new ManhattanLayer(this.viewer.scene);
+        this.manhattan.load();
+        await this.collision.initialize();
+        const local = this.manhattan.snapshot();
+        this.sources.manhattan = local.visualReady ? "ready" : "loading";
+        this.sources.collision = local.collisionReady ? "ready" : "loading";
+        this.updateReadiness();
       }
       this.animationFrame = requestAnimationFrame(this.tick);
     } catch (cause) {
@@ -143,8 +213,21 @@ export class WorldEngine {
     cancelAnimationFrame(this.animationFrame);
     this.input.stop();
     this.viewer.canvas.removeEventListener("click", this.onCanvasClick);
+    this.viewer.canvas.removeEventListener(
+      "webglcontextlost",
+      this.onContextLost,
+    );
+    this.viewer.canvas.removeEventListener(
+      "webglcontextrestored",
+      this.onContextRestored,
+    );
+    this.viewer.scene.globe.tileLoadProgressEvent.removeEventListener(
+      this.onGlobeLoadProgress,
+    );
     if (this.tileSet)
       this.tileSet.loadProgress.removeEventListener(this.onLoadProgress);
+    this.manhattan?.destroy();
+    this.collision.destroy();
     this.viewer.destroy();
   }
 
@@ -200,11 +283,28 @@ export class WorldEngine {
       grounded: false,
     };
     this.pendingRequests = Math.max(1, this.pendingRequests);
-    this.ready = this.options.config.tileProvider === "ellipsoid";
+    this.ready = this.options.config.tileProvider === "offline-fixture";
+    const local = isInsideManhattanFixture(this.state.position);
+    this.sources.manhattan = local ? "ready" : "degraded";
+    this.sources.collision = local ? "ready" : "degraded";
     this.applyCamera();
   }
 
   private readonly onCanvasClick = (): void => this.input.requestPointerLock();
+
+  private readonly onContextLost = (event: Event): void => {
+    event.preventDefault();
+    this.ready = false;
+    this.sources = Object.fromEntries(
+      Object.keys(this.sources).map((key) => [key, "error"]),
+    ) as EngineSnapshot["sources"];
+  };
+
+  private readonly onContextRestored = (): void => {
+    this.sources.terrain = "loading";
+    this.sources.imagery = "loading";
+    location.reload();
+  };
 
   private readonly onLoadProgress = (
     pendingRequests: number,
@@ -212,24 +312,64 @@ export class WorldEngine {
   ): void => {
     this.pendingRequests = pendingRequests;
     this.processingTiles = processingTiles;
-    if (pendingRequests === 0 && processingTiles === 0) this.ready = true;
+    if (pendingRequests === 0 && processingTiles === 0) {
+      this.sources.buildings = "ready";
+    }
+    this.updateReadiness();
   };
+
+  private readonly onGlobeLoadProgress = (queuedTiles: number): void => {
+    this.globePending = queuedTiles;
+    if (this.providersInitialized && queuedTiles === 0) {
+      this.sources.terrain = "ready";
+      this.sources.imagery = "ready";
+    }
+    this.updateReadiness();
+  };
+
+  private updateReadiness(): void {
+    if (!this.providersInitialized) return;
+    const buildingsReady =
+      this.sources.buildings === "ready" ||
+      this.sources.buildings === "degraded";
+    this.ready =
+      this.globePending === 0 &&
+      buildingsReady &&
+      this.sources.manhattan === "ready" &&
+      this.sources.collision === "ready";
+  }
 
   private readonly tick = (now: number): void => {
     if (this.destroyed) return;
     const elapsed = Math.min(0.1, (now - this.lastFrameAt) / 1_000);
     this.lastFrameAt = now;
     const frameTime = elapsed * 1_000;
+    const frameSamples = (window.__SUPERMAN_FRAME_SAMPLES__ ??= []);
+    frameSamples.push(frameTime);
+    if (frameSamples.length > 3_600) frameSamples.shift();
     const quality = this.quality.sample(frameTime, now);
-    this.viewer.resolutionScale = quality.scale;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const pixelRatioScale =
+      Math.min(dpr, this.options.config.quality.maximumPixelRatio) / dpr;
+    this.viewer.resolutionScale = pixelRatioScale * quality.scale;
+    this.viewer.scene.postProcessStages.fxaa.enabled = quality.stage < 1;
+    this.viewer.shadows =
+      this.options.config.quality.shadows && quality.stage < 2;
+    if (this.viewer.scene.skyAtmosphere) {
+      this.viewer.scene.skyAtmosphere.show =
+        this.options.config.quality.atmosphere && quality.stage < 3;
+    }
+    if (this.tileSet) {
+      this.tileSet.maximumScreenSpaceError =
+        this.options.config.quality.maximumScreenSpaceError *
+        (quality.stage >= 4 ? 1.5 : 1);
+    }
 
     const input =
       document.pointerLockElement === this.viewer.canvas
         ? this.input.consume()
         : EMPTY_INPUT;
     let ground = this.sampleGround();
-    if (!this.ready && this.options.config.tileProvider === "ellipsoid")
-      this.ready = true;
     if (this.state.mode === "loading" && this.ready) {
       ground ??= { height: 0, confidence: 1, slopeDegrees: 0 };
       this.state = {
@@ -242,7 +382,20 @@ export class WorldEngine {
     }
 
     this.fixedStep.advance(elapsed, (delta) => {
-      this.state = stepSimulation(this.state, input, delta, ground);
+      const previous = this.state;
+      const next = stepSimulation(this.state, input, delta, ground);
+      this.state =
+        next.mode === "walking" &&
+        this.options.config.tileProvider !== "google" &&
+        isInsideManhattanFixture(next.position)
+          ? {
+              ...next,
+              position: this.collision.constrain(
+                previous.position,
+                next.position,
+              ),
+            }
+          : next;
     });
     if (this.state.position.height > -100)
       this.validPosition = { ...this.state.position };
@@ -253,7 +406,14 @@ export class WorldEngine {
       this.lastSnapshotAt = now;
       const readiness = this.ready
         ? 1
-        : Math.max(0.05, 1 / (1 + this.pendingRequests + this.processingTiles));
+        : Math.max(
+            0.05,
+            1 /
+              (1 +
+                this.pendingRequests +
+                this.processingTiles +
+                this.globePending),
+          );
       const metrics: RendererMetrics = {
         fps: frameTime > 0 ? 1_000 / frameTime : 0,
         frameTimeMs: frameTime,
@@ -266,23 +426,42 @@ export class WorldEngine {
         latitude: this.state.position.latitude,
         altitude: this.state.position.height,
         speed: this.state.speed,
+        devicePixelRatio: dpr,
+        framebufferWidth: this.viewer.canvas.width,
+        framebufferHeight: this.viewer.canvas.height,
+        cssWidth: this.viewer.canvas.clientWidth,
+        cssHeight: this.viewer.canvas.clientHeight,
+        worldQuality: !this.ready
+          ? "loading"
+          : quality.scale < 0.999
+            ? "degraded"
+            : "sharp",
       };
       window.__SUPERMAN_METRICS__ = metrics;
+      window.__SUPERMAN_SOURCE_STATUS__ = { ...this.sources };
       this.options.onSnapshot({
         mode: this.state.mode,
         qualityLabel: this.ready
-          ? `${this.options.config.qualityProfileName} · high detail`
+          ? `${this.options.config.qualityProfileName} · ${quality.scale < 0.999 ? "adaptive detail" : "sharp"}`
           : "refining world",
-        loadingMessage: this.ready ? "" : "Streaming detailed geometry…",
+        loadingMessage: this.ready
+          ? ""
+          : "Preparing terrain, imagery, buildings, and collision…",
         metrics,
+        attribution: this.attribution,
+        sources: { ...this.sources },
       });
     }
     this.animationFrame = requestAnimationFrame(this.tick);
   };
 
   private sampleGround(): GroundSample | undefined {
-    if (this.options.config.tileProvider === "ellipsoid") {
-      return { height: 0, confidence: 1, slopeDegrees: 0 };
+    if (this.options.config.tileProvider === "offline-fixture") {
+      return {
+        height: 0,
+        confidence: isInsideManhattanFixture(this.state.position) ? 1 : 0.5,
+        slopeDegrees: 0,
+      };
     }
     try {
       const height = this.viewer.scene.sampleHeight(

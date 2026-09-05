@@ -15,6 +15,8 @@ export interface QualityProfile {
   shadows: boolean;
   atmosphere: boolean;
   minimumResolutionScale: number;
+  anisotropy: number;
+  targetFrameTimeMs: number;
 }
 
 export const QUALITY_PROFILES: Record<QualityProfileName, QualityProfile> = {
@@ -24,15 +26,19 @@ export const QUALITY_PROFILES: Record<QualityProfileName, QualityProfile> = {
     cacheMegabytes: 1024,
     shadows: true,
     atmosphere: true,
-    minimumResolutionScale: 0.7,
+    minimumResolutionScale: 0.9,
+    anisotropy: 16,
+    targetFrameTimeMs: 16.7,
   },
   high: {
-    maximumPixelRatio: 1.5,
+    maximumPixelRatio: 2,
     maximumScreenSpaceError: 6,
     cacheMegabytes: 768,
     shadows: true,
     atmosphere: true,
-    minimumResolutionScale: 0.65,
+    minimumResolutionScale: 0.85,
+    anisotropy: 16,
+    targetFrameTimeMs: 16.7,
   },
   balanced: {
     maximumPixelRatio: 1.25,
@@ -40,7 +46,9 @@ export const QUALITY_PROFILES: Record<QualityProfileName, QualityProfile> = {
     cacheMegabytes: 512,
     shadows: false,
     atmosphere: true,
-    minimumResolutionScale: 0.6,
+    minimumResolutionScale: 0.85,
+    anisotropy: 8,
+    targetFrameTimeMs: 22.2,
   },
   safe: {
     maximumPixelRatio: 1,
@@ -48,7 +56,9 @@ export const QUALITY_PROFILES: Record<QualityProfileName, QualityProfile> = {
     cacheMegabytes: 256,
     shadows: false,
     atmosphere: false,
-    minimumResolutionScale: 0.55,
+    minimumResolutionScale: 0.75,
+    anisotropy: 4,
+    targetFrameTimeMs: 33.3,
   },
 };
 
@@ -59,7 +69,10 @@ const booleanString = z
 
 const runtimeConfigSchema = z.object({
   VITE_GOOGLE_MAP_TILES_KEY: z.string().trim().optional().default(""),
-  VITE_TILE_PROVIDER: z.enum(["auto", "google", "ellipsoid"]).default("auto"),
+  VITE_CESIUM_ION_TOKEN: z.string().trim().optional().default(""),
+  VITE_TILE_PROVIDER: z
+    .enum(["auto", "google", "hybrid", "offline-fixture"])
+    .default("auto"),
   VITE_QUALITY_PROFILE: qualityProfileNameSchema.default("high"),
   VITE_ENABLE_HERO_ZONE: booleanString,
   VITE_ENABLE_TELEMETRY: booleanString,
@@ -68,7 +81,8 @@ const runtimeConfigSchema = z.object({
 
 export interface RuntimeConfig {
   googleMapTilesKey: string;
-  tileProvider: "google" | "ellipsoid";
+  cesiumIonToken: string;
+  tileProvider: "google" | "hybrid" | "offline-fixture";
   qualityProfileName: QualityProfileName;
   quality: QualityProfile;
   heroZoneEnabled: boolean;
@@ -82,17 +96,23 @@ export function parseRuntimeConfig(
   const value = runtimeConfigSchema.parse(source);
   const tileProvider =
     value.VITE_TILE_PROVIDER === "auto"
-      ? value.VITE_GOOGLE_MAP_TILES_KEY
-        ? "google"
-        : "ellipsoid"
+      ? value.VITE_CESIUM_ION_TOKEN
+        ? "hybrid"
+        : "offline-fixture"
       : value.VITE_TILE_PROVIDER;
   if (tileProvider === "google" && !value.VITE_GOOGLE_MAP_TILES_KEY) {
     throw new Error(
       "VITE_GOOGLE_MAP_TILES_KEY is required when Google tiles are selected.",
     );
   }
+  if (tileProvider === "hybrid" && !value.VITE_CESIUM_ION_TOKEN) {
+    throw new Error(
+      "VITE_CESIUM_ION_TOKEN is required when the live hybrid world is selected.",
+    );
+  }
   return {
     googleMapTilesKey: value.VITE_GOOGLE_MAP_TILES_KEY,
+    cesiumIonToken: value.VITE_CESIUM_ION_TOKEN,
     tileProvider,
     qualityProfileName: value.VITE_QUALITY_PROFILE,
     quality: QUALITY_PROFILES[value.VITE_QUALITY_PROFILE],

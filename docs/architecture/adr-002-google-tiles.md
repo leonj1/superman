@@ -1,7 +1,7 @@
-# ADR-002: Google Photorealistic 3D Tiles is the production visual source
+# ADR-002: Google Photorealistic 3D Tiles comparison path
 
-- Status: Accepted
+- Status: Superseded by ADR-005
 - Date: 2026-09-05
-- Context: The product prioritizes the highest practical browser-scale world imagery.
-- Decision: Use Google Photorealistic 3D Tiles through a domain-restricted public key, with visible attribution and a labeled WGS84 preview fallback.
-- Consequences: Production requires billing, quota alarms, coverage messaging, and adherence to Google Map Tiles policies. Cached extraction is forbidden.
+- Context: The initial product prioritized broad photorealistic coverage, but measurement showed eye-level blur, reconstructed-geometry noise, and unstable refinement for the Manhattan experience.
+- Decision: Retain Google Photorealistic 3D Tiles only as an explicitly selected, domain-restricted comparison provider. It is never selected automatically and is not the production default.
+- Consequences: Existing comparison evidence remains reproducible. Any comparison run still requires attribution and compliance with Google Map Tiles policies; normal development and production do not require a Google key.

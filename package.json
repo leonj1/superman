@@ -20,16 +20,21 @@
     "test:visual": "playwright test --grep @visual",
     "test:a11y": "playwright test --grep @a11y",
     "test:provider": "vitest run packages/config/src/provider.test.ts",
+    "test:image-quality": "vitest run packages/telemetry/src/telemetry.test.ts && playwright test --grep @image-quality",
+    "test:performance": "playwright test --grep @performance",
     "build": "pnpm -r build",
     "analyze:bundle": "node scripts/bundle-budget.mjs",
     "benchmark:motion": "vitest run packages/simulation/src/motion.benchmark.test.ts",
     "benchmark:manhattan": "node scripts/benchmark-report.mjs manhattan",
     "benchmark:memory": "node scripts/benchmark-report.mjs memory",
+    "benchmark:global-buildings": "node scripts/benchmark-report.mjs global-buildings",
+    "benchmark:all": "pnpm test:performance && node scripts/benchmark-report.mjs all",
     "docs:check": "node scripts/docs-check.mjs",
     "assets:check": "node scripts/assets-check.mjs",
+    "assets:licenses": "node scripts/assets-check.mjs --licenses",
     "secrets:check": "node scripts/secrets-check.mjs",
     "version:check": "node scripts/version-check.mjs",
-    "verify": "pnpm version:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:provider && pnpm benchmark:motion && pnpm docs:check && pnpm assets:check && pnpm secrets:check && pnpm build && pnpm analyze:bundle"
+    "verify": "pnpm version:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:provider && pnpm benchmark:motion && pnpm docs:check && pnpm assets:check && pnpm assets:licenses && pnpm secrets:check && pnpm build && pnpm analyze:bundle"
   },
   "devDependencies": {
     "@eslint/js": "9.35.0",
