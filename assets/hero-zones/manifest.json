@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "zones": [],
+  "policy": "Every added source or derived asset must declare author, license, source, allowedUse, decodedGpuMegabytes, triangles, drawCalls, and lods."
+}

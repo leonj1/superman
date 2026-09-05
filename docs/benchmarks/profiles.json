@@ -1,0 +1,31 @@
+{
+  "$schema": "./profiles.schema.json",
+  "profiles": [
+    {
+      "id": "reference-1080p",
+      "class": "reference",
+      "os": "record-on-release-worker",
+      "browser": "stable-chromium",
+      "cpu": "record-on-release-worker",
+      "gpu": "record-on-release-worker",
+      "memoryGb": 16,
+      "width": 1920,
+      "height": 1080,
+      "devicePixelRatio": 1,
+      "network": "warm-unthrottled"
+    },
+    {
+      "id": "mid-tier-1080p",
+      "class": "mid-tier",
+      "os": "record-on-release-worker",
+      "browser": "stable-chromium",
+      "cpu": "record-on-release-worker",
+      "gpu": "record-on-release-worker",
+      "memoryGb": 8,
+      "width": 1920,
+      "height": 1080,
+      "devicePixelRatio": 1,
+      "network": "cold-fast-4g"
+    }
+  ]
+}

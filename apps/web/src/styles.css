@@ -1,0 +1,453 @@
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: #f7fbff;
+  background: #05080b;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --glass: rgba(8, 16, 22, 0.76);
+  --line: rgba(255, 255, 255, 0.14);
+  --red: #e62a2f;
+  --blue: #78d4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+button,
+a {
+  font: inherit;
+}
+button {
+  color: inherit;
+}
+
+.world-shell,
+.world-canvas,
+.vignette {
+  position: fixed;
+  inset: 0;
+}
+.world-canvas {
+  background: radial-gradient(circle at 50% 45%, #17354b, #04090e 70%);
+}
+.world-canvas canvas {
+  image-rendering: auto;
+  outline: none;
+}
+.vignette {
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    transparent 55%,
+    rgba(0, 0, 0, 0.43) 100%
+  );
+  z-index: 1;
+}
+
+.topbar {
+  position: fixed;
+  z-index: 4;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 30px;
+  pointer-events: none;
+}
+.brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+  letter-spacing: 0.13em;
+}
+.brand span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+.brand strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+.brand small {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 8px;
+  margin-top: 2px;
+}
+.brand-mark {
+  width: 34px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  background: linear-gradient(145deg, #ff454b, #aa0c13);
+  clip-path: polygon(15% 0, 85% 0, 100% 30%, 50% 100%, 0 30%);
+  text-shadow: 0 1px #64070b;
+}
+.brand-mark.large {
+  width: 76px;
+  height: 67px;
+  font-size: 34px;
+  margin-bottom: 20px;
+}
+
+.status-pill {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 9px 13px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(16px);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #56e49f;
+  box-shadow: 0 0 9px #56e49f;
+}
+.pulse.amber {
+  background: #ffbf48;
+  box-shadow: 0 0 9px #ffbf48;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.loading-card {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(390px, calc(100vw - 40px));
+  padding: 27px;
+  text-align: center;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 80px #0009;
+}
+.loading-card p {
+  margin: 15px 0 6px;
+  font-weight: 650;
+}
+.loading-card small {
+  color: #a9b5bf;
+  line-height: 1.5;
+}
+.loader {
+  display: block;
+  margin: auto;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.17);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.reticle {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  opacity: 0.65;
+  pointer-events: none;
+}
+.reticle::before,
+.reticle::after {
+  content: "";
+  position: absolute;
+  background: white;
+}
+.reticle::before {
+  width: 1px;
+  height: 18px;
+  left: 8px;
+}
+.reticle::after {
+  height: 1px;
+  width: 18px;
+  top: 8px;
+}
+.reticle span {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid white;
+  border-radius: 50%;
+  background: #fff3;
+}
+
+.telemetry-panel {
+  position: fixed;
+  z-index: 3;
+  top: 50%;
+  right: 25px;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 1px;
+  width: 138px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  overflow: hidden;
+  box-shadow: 0 16px 45px #0005;
+}
+.telemetry-panel > div {
+  background: var(--glass);
+  padding: 11px 14px;
+  backdrop-filter: blur(14px);
+}
+.telemetry-panel small {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: #8ca0ae;
+}
+.telemetry-panel strong {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.telemetry-panel em {
+  font-size: 10px;
+  color: #8ca0ae;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.action-dock {
+  position: fixed;
+  z-index: 4;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--glass);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 55px #0008;
+}
+.action-dock button {
+  min-width: 118px;
+  padding: 11px 15px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+.action-dock button:last-child {
+  border-right: 0;
+}
+.action-dock button:hover,
+.action-dock button:focus-visible,
+.location-strip button:hover,
+.location-strip button:focus-visible {
+  background: rgba(255, 255, 255, 0.11);
+  outline: none;
+}
+.action-dock button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+kbd {
+  padding: 2px 5px;
+  border: 1px solid #ffffff29;
+  border-bottom-color: #ffffff50;
+  border-radius: 4px;
+  color: #aebcc5;
+  font-size: 9px;
+  background: #0003;
+}
+
+.location-strip {
+  position: fixed;
+  z-index: 3;
+  bottom: 21px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.location-strip > span {
+  margin-right: 7px;
+  color: #8ca0ae;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+.location-strip button {
+  border: 0;
+  border-radius: 5px;
+  padding: 5px 8px;
+  background: #09141dbb;
+  color: #ccd8df;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.controls-card {
+  position: fixed;
+  z-index: 6;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, calc(100vw - 40px));
+  padding: 28px;
+  background: rgba(7, 14, 20, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 25px 90px #000c;
+  backdrop-filter: blur(20px);
+}
+.controls-card h2 {
+  margin: 0 0 18px;
+  font-size: 18px;
+}
+.controls-card .close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+.controls-card dl {
+  margin: 0;
+}
+.controls-card dl div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.controls-card dt,
+.controls-card dd {
+  margin: 0;
+  color: #b6c2ca;
+  font-size: 12px;
+}
+
+.credits {
+  position: fixed;
+  z-index: 5;
+  right: 14px;
+  bottom: 8px;
+  max-width: 50vw;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 8px;
+  text-align: right;
+  pointer-events: none;
+}
+.fatal-screen {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 35%, #142c3c, #05080b 70%);
+}
+.fatal-screen h1 {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 4vw, 48px);
+}
+.fatal-screen p:not(.eyebrow) {
+  max-width: 580px;
+  color: #a9b5bf;
+  line-height: 1.6;
+}
+.fatal-screen .eyebrow {
+  color: var(--blue);
+  letter-spacing: 0.18em;
+  font-size: 10px;
+}
+.fatal-screen button {
+  margin-top: 15px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: #071018;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .telemetry-panel {
+    top: 85px;
+    right: 14px;
+    transform: none;
+    width: 112px;
+  }
+  .telemetry-panel > div:nth-child(2),
+  .telemetry-panel > div:nth-child(4) {
+    display: none;
+  }
+  .location-strip {
+    display: none;
+  }
+  .action-dock {
+    bottom: 25px;
+  }
+  .action-dock button {
+    min-width: 95px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

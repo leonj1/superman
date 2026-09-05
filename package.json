@@ -1,0 +1,47 @@
+{
+  "name": "superman-world",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=22.22.0 <23"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @superman/web dev",
+    "dev:api": "pnpm --filter @superman/api dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts' --exclude '**/e2e/**'",
+    "test:integration": "vitest run apps/api/src/app.integration.test.ts",
+    "test:e2e": "playwright test",
+    "test:visual": "playwright test --grep @visual",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:provider": "vitest run packages/config/src/provider.test.ts",
+    "build": "pnpm -r build",
+    "analyze:bundle": "node scripts/bundle-budget.mjs",
+    "benchmark:motion": "vitest run packages/simulation/src/motion.benchmark.test.ts",
+    "benchmark:manhattan": "node scripts/benchmark-report.mjs manhattan",
+    "benchmark:memory": "node scripts/benchmark-report.mjs memory",
+    "docs:check": "node scripts/docs-check.mjs",
+    "assets:check": "node scripts/assets-check.mjs",
+    "secrets:check": "node scripts/secrets-check.mjs",
+    "version:check": "node scripts/version-check.mjs",
+    "verify": "pnpm version:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:provider && pnpm benchmark:motion && pnpm docs:check && pnpm assets:check && pnpm secrets:check && pnpm build && pnpm analyze:bundle"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.35.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.18.1",
+    "eslint": "9.35.0",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.20",
+    "globals": "16.3.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.42.0",
+    "vitest": "3.2.4"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@superman/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.20.0",
+    "@superman/config": "workspace:*",
+    "@superman/geo": "workspace:*",
+    "@superman/simulation": "workspace:*",
+    "@superman/telemetry": "workspace:*",
+    "cesium": "1.145.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "@vitejs/plugin-react": "5.0.2",
+    "typescript": "5.9.2",
+    "vite": "7.1.4",
+    "vite-plugin-static-copy": "3.1.2"
+  }
+}
