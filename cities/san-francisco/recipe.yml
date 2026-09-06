@@ -1,35 +1,145 @@
 {
   "schemaVersion": 1,
   "city": "san-francisco",
+  "creationMode": "hybrid",
+  "creationRationale": "No authoritative, current, redistributable, game-ready 3D model was found for the metro extent. Reconstruct terrain and massing from acquired municipal footprints and NOAA elevation, fill metro gaps with a reviewed Overture extract, and use licensed landmarks or labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
+    "building-footprints",
+    "elevation-point-cloud",
     "terrain",
     "imagery",
-    "roads",
     "water",
-    "vegetation"
+    "transit-routes",
+    "vegetation",
+    "metro-baseline",
+    "landmark-models"
   ],
+  "coordinates": {
+    "workingHorizontal": "EPSG:7131",
+    "workingVertical": "NAVD88 metres",
+    "runtimeCrs": "EPSG:4978",
+    "verticalTransform": "Transform NAVD88 through a checksum-pinned GEOID18 grid; reject unresolved vertical datums.",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [-122.874018, 37.415606, -121.964822, 38.134254],
+    "coreBbox": [-122.533069, 37.685099, -122.305771, 37.864761],
+    "heroZones": [
+      {
+        "id": "steep-streets",
+        "bbox": [-122.423, 37.79, -122.409, 37.806],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "includes": ["Nob Hill", "Russian Hill", "Lombard Street", "Powell-Hyde cable car"]
+      },
+      {
+        "id": "embarcadero-chinatown",
+        "bbox": [-122.417, 37.7865, -122.395, 37.805],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "includes": ["Embarcadero", "Ferry Building", "Transamerica Pyramid", "Chinatown", "piers"]
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": { "metro": [0, 1], "core": [0, 1, 2], "hero": [0, 1, 2, 3] }
+  },
+  "sourcePriority": {
+    "terrain": ["noaa-sfei-sf-bay-dem-2025-14675", "usgs-3dep-sf-metro"],
+    "buildings": ["sf-landmark-models", "noaa-sfei-sf-bay-lidar-2025-14673", "datasf-building-footprints-ynuv-fyni", "overture-sf-metro-release", "procedural-proxy"],
+    "imagery": ["noaa-ngs-sf-imagery-2025-10318", "usda-naip-california-sf-metro"],
+    "water": ["noaa-sfei-sf-bay-dem-2025-14675", "datasf-shoreline-islands-txuc-3kzm", "overture-sf-metro-release"],
+    "transit": ["datasf-muni-simple-routes-twv9-dib2", "overture-sf-metro-release"],
+    "vegetation": ["datasf-street-trees-frdy-nem6", "overture-sf-metro-release", "procedural-biome"]
+  },
+  "requiredCoverage": {
+    "districts": ["Downtown/SoMa", "Embarcadero", "Chinatown", "North Beach", "Presidio", "Mission", "Golden Gate Park"],
+    "geography": ["San Francisco peninsula", "Treasure Island", "Yerba Buena Island", "Alcatraz Island", "bay shoreline", "Oakland edge", "SFO approaches"],
+    "bridges": ["Golden Gate Bridge", "San Francisco-Oakland Bay Bridge"],
+    "landmarks": ["Transamerica Pyramid", "Salesforce Tower", "Coit Tower", "Ferry Building", "Palace of Fine Arts", "Alcatraz", "cable cars", "Embarcadero piers"],
+    "systems": ["graded roads", "cable-car routes", "water-traffic routes", "bridge collision", "shoreline skirts", "fog-compatible materials", "night skyline"]
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "waterTraffic": true,
+    "nightEmission": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "bridgeDecks": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "transform-to-epsg-7131-and-epsg-4978",
+    "correct-navd88-with-pinned-geoid18",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-building-road-shoreline-and-island-topology",
+    "conflate-by-declared-feature-priority",
+    "grade-roads-and-sidewalks-to-terrain",
+    "reconstruct-building-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmarks",
+    "generate-fog-materials-night-emission-and-transit-routes",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "validate-hill-grades-bridge-clearances-and-water-seams",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-san-francisco-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "maximumRoadGradeErrorRatio": 0.05,
+    "maximumBridgeDeckVerticalErrorMeters": 1,
+    "maximumBridgeEndpointErrorMeters": 3,
+    "maximumIslandWaterSeamMeters": 0.25,
+    "minimumStreetParallaxPixels": 2,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95,
+    "requiredRoutes": ["powell-hyde-cable-car", "embarcadero-chinatown-walk", "golden-gate-bridge-flight", "bay-bridge-flight", "alcatraz-water-approach", "sfo-north-approach"]
+  },
+  "performance": {
+    "resolution": [2560, 1440],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

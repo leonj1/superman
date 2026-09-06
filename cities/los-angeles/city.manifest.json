@@ -3,21 +3,18 @@
   "city": "los-angeles",
   "phase": 3,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
-  "sourceLineage": [
-    "geonames-5368361"
-  ],
+  "sourceLineage": ["geonames-5368361"],
   "featureCounts": null,
   "coverage": null,
   "budgets": null,
   "collisionHash": null,
   "landmarkIds": [],
   "screenshots": [],
-  "attribution": [
-    "GeoNames (https://www.geonames.org/)"
-  ],
+  "attribution": ["GeoNames (https://www.geonames.org/)"],
   "performanceCertified": false,
   "certificationEvidence": null,
   "visualEvidence": null,
@@ -25,9 +22,23 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "existingTexturedCityModelFound": false,
+    "preferredTerrain": "usgs-ca-los-angeles-b23-dem",
+    "preferredBuildingGeometry": "la-county-lariac6-buildings-2020",
+    "fallbackBuildingGeometry": "overture-2026-08-19-buildings",
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/los-angeles/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "Exact USGS CA_LosAngeles_B23 terrain tiles have not been acquired and checksum-pinned.",
+    "LARIAC6 derived-mesh redistribution needs human terms approval.",
+    "A dated imagery extraction with derivative-texture rights and hero-zone resolution is not approved.",
+    "ODbL derivative-database publication and attribution obligations need legal approval.",
+    "Redistributable landmark models have not been acquired; proxies cannot be represented as final art.",
+    "Terrain, geometry, collision, navigation, textures, and evidence packages have not been built.",
+    "CDN storage, signing key, rollback pointer, and public HTTP verification target are unavailable.",
+    "Named physical-GPU evidence and two-person license/visual approval are unavailable."
   ]
 }

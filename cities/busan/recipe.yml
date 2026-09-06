@@ -1,35 +1,234 @@
 {
   "schemaVersion": 1,
   "city": "busan",
+  "phase": 150,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      128.590839,
+      34.742356,
+      129.469241,
+      35.461004
+    ],
+    "coreBbox": [
+      128.92024,
+      35.011849,
+      129.13984,
+      35.191511
+    ],
+    "heroZones": [
+      {
+        "id": "nampo-jagalchi-hero",
+        "name": "Nampo/Jagalchi",
+        "bbox": [
+          129.014393,
+          35.097188,
+          129.030864,
+          35.106172
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Nampo–Gamcheon and Haeundae/Gwangalli hero zones, extreme coast/mountain terrain, bridge/port/boats, colorful terraces, collision, fog/rain and night materials."
+      },
+      {
+        "id": "gamcheon-hero",
+        "name": "Gamcheon",
+        "bbox": [
+          129.029216,
+          35.097188,
+          129.045687,
+          35.106172
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Nampo/Jagalchi, Gamcheon, Haeundae, Centum, Gwangalli; include Busan Tower, Jagalchi, Gamcheon terraces, LCT towers, Cinema Center exterior, Gwangandaegyo, port cranes/ships, beaches, cable car, station, and Metro."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "busan-official-data-discovery"
+    ],
+    "buildings": [
+      "busan-landmark-model-discovery",
+      "busan-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "busan-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "busan-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "busan-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "busan-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "busan-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Nampo/Jagalchi",
+      "Gamcheon",
+      "Haeundae",
+      "Centum",
+      "Gwangalli"
+    ],
+    "landmarks": [
+      "Busan Tower",
+      "Jagalchi",
+      "Gamcheon terraces",
+      "LCT towers",
+      "Cinema Center exterior",
+      "Gwangandaegyo",
+      "port cranes/ships",
+      "beaches",
+      "cable car",
+      "station",
+      "Metro"
+    ],
+    "geography": [
+      "port/bay",
+      "central districts",
+      "Haeundae",
+      "mountain ridges",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "port/bay"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Busan/Korean open 3D, terrain, orthophoto, coast and building data before Overture/OSM; cover port/bay, central districts, Haeundae, mountain ridges, rail, and airport approach.",
+    "detail": "Detail Nampo/Jagalchi, Gamcheon, Haeundae, Centum, Gwangalli; include Busan Tower, Jagalchi, Gamcheon terraces, LCT towers, Cinema Center exterior, Gwangandaegyo, port cranes/ships, beaches, cable car, station, and Metro.",
+    "build": "Build Nampo–Gamcheon and Haeundae/Gwangalli hero zones, extreme coast/mountain terrain, bridge/port/boats, colorful terraces, collision, fog/rain and night materials.",
+    "assertion": "Assert ridge/coast/port geometry, bridge clearance/lighting, Metro and skyline clusters, and `city:verify --city busan`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-busan-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

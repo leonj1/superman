@@ -3,6 +3,7 @@
   "city": "wellington",
   "phase": 189,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 189,
+    "phaseFile": "phases/PHASE_189.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/wellington/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Wellington/LINZ official 3D/LiDAR, steep terrain, orthophoto and building data before Overture/OSM; cover CBD/harbor, surrounding hills, airport approach, rail, and port.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail civic/waterfront, parliament, Cuba Street, Mount Victoria; include Beehive/Parliament public exteriors, railway station, Te Papa exterior, cable car, stadium, airport runway, port/ferries, and hillside houses.",
+    "phase-specific-topology-and-experience: Assert slope/road/cable-car geometry, harbor/airport runway, landmark and vegetation budgets, and `city:verify --city wellington`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

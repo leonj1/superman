@@ -3,6 +3,7 @@
   "city": "beirut",
   "phase": 139,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 139,
+    "phaseFile": "phases/PHASE_139.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/beirut/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire lawful Lebanese/Beirut terrain, coast, imagery, building and heritage data with current damage/reconstruction dates before Overture/OSM; cover center, Corniche, port public shell, hills, and airport approach without sensitive infrastructure.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Downtown, Gemmayzeh/Mar Mikhael, Hamra, Corniche/Raouché; include Pigeon Rocks, Mohammad Al-Amin/St George exteriors, Roman baths context, Martyrs’ Square, museum exteriors, port silos current-state metadata, waterfront towers, and airport.",
+    "phase-specific-topology-and-experience: Assert capture dates/damage metadata, coastline/Pigeon Rocks, heritage and sensitive exclusions, and `city:verify --city beirut`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

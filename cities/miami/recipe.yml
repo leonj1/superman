@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "miami",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,176 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildingFootprints": [
+      "miami-dade-building-footprints-2024",
+      "overture-2026-08-19-miami-buildings"
+    ],
+    "buildingHeights": [
+      "usgs-3dep-miami-current",
+      "procedural-height-by-zoning-and-building-class"
+    ],
+    "terrain": ["usgs-3dep-miami-current"],
+    "bathymetry": ["noaa-biscayne-bay-s200-bathymetry"],
+    "imagery": [
+      "approved-miami-dade-orthophoto-if-licensed",
+      "usda-naip-florida-current"
+    ],
+    "roadsAndCauseways": ["overture-2026-08-19-miami-transportation"],
+    "shorelineAndWater": [
+      "overture-2026-08-19-miami-water",
+      "noaa-biscayne-bay-s200-bathymetry"
+    ],
+    "vegetation": ["overture-2026-08-19-miami-land-use"]
+  },
+  "coordinateContract": {
+    "authoritativeHorizontal": "EPSG:6438",
+    "authoritativeVertical": "NAVD88",
+    "runtime": "EPSG:4978",
+    "catalogAndExchange": "OGC:CRS84",
+    "verticalConversion": "NAVD88 and MLLW to WGS84 ellipsoidal height using pinned NOAA GEOID18 and VDatum grids",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
-    "coreRadiusKm": 10,
+    "coreRadiusKm": 12,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -80.592681,
+        "south": 25.414946,
+        "east": -79.794639,
+        "north": 26.133594
+      },
+      "core": {
+        "west": -80.32,
+        "south": 25.68,
+        "east": -80.105,
+        "north": 25.91
+      },
+      "heroZones": [
+        {
+          "id": "brickell-bayfront",
+          "west": -80.201,
+          "south": 25.762,
+          "east": -80.181,
+          "north": 25.78,
+          "minimumAreaSquareKm": 3
+        },
+        {
+          "id": "south-beach-art-deco",
+          "west": -80.139,
+          "south": 25.78,
+          "east": -80.124,
+          "north": 25.802,
+          "minimumAreaSquareKm": 3
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Brickell",
+      "Downtown",
+      "South Beach",
+      "Art Deco Historic District",
+      "Wynwood",
+      "Coconut Grove",
+      "Key Biscayne"
+    ],
+    "water": [
+      "Biscayne Bay",
+      "Atlantic Ocean",
+      "Miami River",
+      "Government Cut"
+    ],
+    "islandsAndCoast": [
+      "Miami Beach barrier island",
+      "Virginia Key",
+      "Key Biscayne",
+      "Dodge Island",
+      "Fisher Island",
+      "coastal beaches",
+      "seawalls"
+    ],
+    "causeways": [
+      "MacArthur Causeway",
+      "Venetian Causeway",
+      "Julia Tuttle Causeway",
+      "Rickenbacker Causeway"
+    ],
+    "landmarks": [
+      "Freedom Tower",
+      "Kaseya Center",
+      "Vizcaya Museum and Gardens",
+      "Ocean Drive",
+      "PortMiami cruise terminals",
+      "South Beach lifeguard towers"
+    ],
+    "airportsAndPorts": [
+      "Miami International Airport",
+      "PortMiami",
+      "Miami Seaplane Base"
+    ],
+    "systems": [
+      "roads",
+      "rail",
+      "Metromover",
+      "causeways",
+      "marinas",
+      "boat routes",
+      "cruise routes",
+      "parks",
+      "beaches",
+      "shoreline",
+      "tropical vegetation",
+      "collision",
+      "navigation"
+    ]
+  },
+  "proceduralGeneration": {
+    "buildingMassingFromFootprintsAndLidar": true,
+    "roofForms": true,
+    "artDecoFacadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "seawallsAndShorelineSkirts": true,
+    "beachMaterials": true,
+    "transparentShallowWater": true,
+    "palmsAndTropicalVegetation": true,
+    "emissiveTowerMaterials": true,
+    "streetFurniture": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "transform-to-epsg-6438",
+    "correct-navd88-and-mllw-to-wgs84-ellipsoid",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-massing-from-footprints-and-lidar",
+    "generate-art-deco-and-modern-facade-classes",
+    "generate-coast-beach-seawall-and-water-surfaces",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-marina-boat-cruise-and-transit-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +188,37 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "maximumShorelineGapMeters": 1,
+    "minimumArtDecoFacadeClassificationRatio": 0.95,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

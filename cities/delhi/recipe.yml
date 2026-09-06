@@ -1,35 +1,228 @@
 {
   "schemaVersion": 1,
   "city": "delhi",
+  "phase": 168,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      76.822026,
+      28.292626,
+      77.640954,
+      29.011274
+    ],
+    "coreBbox": [
+      77.129124,
+      28.562119,
+      77.333856,
+      28.741781
+    ],
+    "heroZones": [
+      {
+        "id": "shahjahanabad-hero",
+        "name": "Shahjahanabad",
+        "bbox": [
+          77.216903,
+          28.647458,
+          77.232258,
+          28.656442
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Old Delhi and Connaught/Central Vista hero zones, Mughal/colonial/modern facade sets, Yamuna, Metro/rail, collision, monsoon/smog and night materials."
+      },
+      {
+        "id": "central-vista-public-exteriors-hero",
+        "name": "Central Vista public exteriors",
+        "bbox": [
+          77.230722,
+          28.647458,
+          77.246077,
+          28.656442
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Shahjahanabad, Central Vista public exteriors, Connaught Place, Mehrauli; include India Gate, Red Fort/Qutub/Humayun’s Tomb exteriors under heritage rights, Jama Masjid exterior, Lotus Temple exterior, Parliament/Rashtrapati public exteriors as permitted, stations, Metro, and airport."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "delhi-official-data-discovery"
+    ],
+    "buildings": [
+      "delhi-landmark-model-discovery",
+      "delhi-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "delhi-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "delhi-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "delhi-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "delhi-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "delhi-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Shahjahanabad",
+      "Central Vista public exteriors",
+      "Connaught Place",
+      "Mehrauli"
+    ],
+    "landmarks": [
+      "India Gate",
+      "Red Fort/Qutub/Humayun’s Tomb exteriors under heritage rights",
+      "Jama Masjid exterior",
+      "Lotus Temple exterior",
+      "Parliament/Rashtrapati public exteriors as permitted",
+      "stations",
+      "Metro",
+      "airport"
+    ],
+    "geography": [
+      "Old/New Delhi",
+      "central NCR shell",
+      "Yamuna",
+      "Metro/rail",
+      "airport corridor without sensitive infrastructure"
+    ],
+    "waterBodies": [],
+    "bridges": [],
+    "airports": [
+      "central NCR shell",
+      "airport corridor without sensitive infrastructure"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Indian/Delhi official terrain, imagery, building, monument and municipal data with security review before Overture/OSM; cover Old/New Delhi, central NCR shell, Yamuna, Metro/rail, and airport corridor without sensitive infrastructure.",
+    "detail": "Detail Shahjahanabad, Central Vista public exteriors, Connaught Place, Mehrauli; include India Gate, Red Fort/Qutub/Humayun’s Tomb exteriors under heritage rights, Jama Masjid exterior, Lotus Temple exterior, Parliament/Rashtrapati public exteriors as permitted, stations, Metro, and airport.",
+    "build": "Build Old Delhi and Connaught/Central Vista hero zones, Mughal/colonial/modern facade sets, Yamuna, Metro/rail, collision, monsoon/smog and night materials.",
+    "assertion": "Assert heritage/security permissions, radial/old-city topology, monument alignment, Metro/airport, and `city:verify --city delhi`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-delhi-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

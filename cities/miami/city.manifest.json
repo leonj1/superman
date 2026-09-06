@@ -3,6 +3,7 @@
   "city": "miami",
   "phase": 5,
   "status": "cataloged",
+  "creationMode": "procedural",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,19 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "preflightEvidence": {
+    "sourceDiscovery": "sources.json",
+    "buildContract": "recipe.yml",
+    "knownExceptions": "exceptions.json",
+    "verifiedAt": null
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "No complete official 3D Miami model with verified redistribution rights was found; city geometry must be generated from acquired GIS inputs.",
+    "Miami-Dade building, LiDAR, and orthophoto service terms require human redistribution review before use.",
+    "Checksum-pinned Overture, USGS 3DEP, NAIP, NOAA bathymetry, and approved Miami-Dade snapshots have not been acquired.",
+    "GDAL, PDAL, VDatum, meshopt, gltfpack, and KTX2 build tooling is not provisioned in this workspace.",
+    "Terrain, building, imagery, shoreline, water, landmark, collision, navigation, port, and transit artifacts have not been built.",
+    "Content signing and immutable CDN publication infrastructure is unavailable.",
+    "Physical-GPU performance evidence and independent human legal and visual approvals are required."
   ]
 }

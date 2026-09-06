@@ -3,6 +3,7 @@
   "city": "san-francisco",
   "phase": 4,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,24 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "existingRedistributableCityModelFound": false,
+    "preferredBuildingFootprints": "datasf-building-footprints-ynuv-fyni",
+    "preferredElevationPointCloud": "noaa-sfei-sf-bay-lidar-2025-14673",
+    "preferredTerrain": "noaa-sfei-sf-bay-dem-2025-14675",
+    "preferredImagery": "noaa-ngs-sf-imagery-2025-10318",
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/san-francisco/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "Exact primary source artifacts and metadata snapshots have not been acquired or checksum-pinned.",
+    "2010-derived municipal building heights require currentness conflation with the 2025 LiDAR and imagery.",
+    "Metro Overture extraction and ODbL publication obligations are unresolved.",
+    "Lawful hero-facade imagery is unavailable; overhead imagery cannot satisfy the facade-density gate.",
+    "Bridge and landmark models have not been acquired or replaced by validated, explicitly labeled proxies.",
+    "Regional ferry-route rights and snapshot acquisition are unresolved.",
+    "Terrain, imagery, geometry, collision, navigation, 3D Tiles, CDN, signing, and rollback artifacts do not exist.",
+    "Named physical-GPU evidence and human license/visual approvals do not exist."
   ]
 }

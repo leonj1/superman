@@ -1,35 +1,229 @@
 {
   "schemaVersion": 1,
   "city": "lahore",
+  "phase": 180,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      73.929023,
+      31.198676,
+      74.772397,
+      31.917324
+    ],
+    "coreBbox": [
+      74.245288,
+      31.468169,
+      74.456132,
+      31.647831
+    ],
+    "heroZones": [
+      {
+        "id": "walled-city-hero",
+        "name": "Walled City",
+        "bbox": [
+          74.335687,
+          31.553508,
+          74.351501,
+          31.562492
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Walled City and Mall hero zones, Mughal/colonial facade/roof assets, gates/alleys, canal/transit, collision, monsoon/haze and night materials."
+      },
+      {
+        "id": "fort-badshahi-public-exteriors-hero",
+        "name": "Fort/Badshahi public exteriors",
+        "bbox": [
+          74.349919,
+          31.553508,
+          74.365733,
+          31.562492
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Walled City, Fort/Badshahi public exteriors, Mall, modern center; include Minar-e-Pakistan, Lahore Fort/Badshahi/Wazir Khan exteriors under heritage rights, city gates, museum exterior, GPO, station, canal, and Metro/Orange Line."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "lahore-official-data-discovery"
+    ],
+    "buildings": [
+      "lahore-landmark-model-discovery",
+      "lahore-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "lahore-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "lahore-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "lahore-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "lahore-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "lahore-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Walled City",
+      "Fort/Badshahi public exteriors",
+      "Mall",
+      "modern center"
+    ],
+    "landmarks": [
+      "Minar-e-Pakistan",
+      "Lahore Fort/Badshahi/Wazir Khan exteriors under heritage rights",
+      "city gates",
+      "museum exterior",
+      "GPO",
+      "station",
+      "canal",
+      "Metro/Orange Line"
+    ],
+    "geography": [
+      "walled city",
+      "Mall/civic corridor",
+      "canal",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "canal"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Pakistan/Punjab terrain, imagery, building and heritage data with security review before Overture/OSM; cover walled city, Mall/civic corridor, canal, rail, and airport approach.",
+    "detail": "Detail Walled City, Fort/Badshahi public exteriors, Mall, modern center; include Minar-e-Pakistan, Lahore Fort/Badshahi/Wazir Khan exteriors under heritage rights, city gates, museum exterior, GPO, station, canal, and Metro/Orange Line.",
+    "build": "Build Walled City and Mall hero zones, Mughal/colonial facade/roof assets, gates/alleys, canal/transit, collision, monsoon/haze and night materials.",
+    "assertion": "Assert heritage permissions, wall/gate/street topology, monument/fort alignment, transit, and `city:verify --city lahore`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-lahore-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

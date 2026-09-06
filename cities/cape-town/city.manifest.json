@@ -26,8 +26,19 @@
   "memoryEvidence": null,
   "collisionEvidence": null,
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
-  ]
+    "Approved checksum-pinned city, terrain, imagery, roads, water, and vegetation inputs have not been acquired.",
+    "Local source and per-image redistribution rights require human review.",
+    "Hero extents, source CRS, vertical datums, and conflation conflicts require authoritative validation.",
+    "Landmark, terrain, visual, collision, navigation, and route artifacts have not been built.",
+    "Content signing and immutable CDN publication infrastructure is unavailable.",
+    "Physical-GPU evidence and independent human legal and visual approvals are required."
+  ],
+  "creationMode": "hybrid",
+  "preflightEvidence": {
+    "sourceDiscovery": "sources.json",
+    "buildContract": "recipe.yml",
+    "knownExceptions": "exceptions.json",
+    "validator": "verify-preflight.mjs",
+    "verifiedAt": null
+  }
 }

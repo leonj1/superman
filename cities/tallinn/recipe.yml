@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "tallinn",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,151 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-tallinn-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-tallinn"
+    ],
+    "imagery": [
+      "openaerialmap-tallinn"
+    ],
+    "roads": [
+      "overture-2026-08-19-tallinn-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-tallinn-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-tallinn-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 24.046875,
+        "south": 59.077636,
+        "east": 25.460185,
+        "north": 59.796284
+      },
+      "core": {
+        "west": 24.576866,
+        "south": 59.347129,
+        "east": 24.930194,
+        "north": 59.526791
+      },
+      "heroZones": [
+        {
+          "id": "toompea-old-town",
+          "west": 24.735864,
+          "south": 59.427977,
+          "east": 24.771196,
+          "north": 59.445943,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "rotermann",
+          "west": 24.7764958,
+          "south": 59.427977,
+          "east": 24.8118278,
+          "north": 59.445943,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Toompea/Old Town",
+      "Rotermann",
+      "waterfront",
+      "Kadriorg"
+    ],
+    "landmarks": [
+      "Town Hall",
+      "Alexander Nevsky",
+      "castle exterior",
+      "city walls/towers",
+      "St Olaf’s",
+      "Kumu exterior",
+      "TV Tower",
+      "ferry port",
+      "trams",
+      "station"
+    ],
+    "geography": [
+      "walled Old Town",
+      "harbor",
+      "Kadriorg",
+      "Ülemiste/airport",
+      "rail",
+      "coast"
+    ],
+    "waterBodies": [
+      "harbor",
+      "coast"
+    ],
+    "bridges": [],
+    "airports": [
+      "Ülemiste/airport"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Tallinn/Estonian official 3D/LiDAR/terrain/orthophoto sources before Overture/OSM; cover walled Old Town, harbor, Kadriorg, Ülemiste/airport, rail, and coast.",
+    "detailScope": "Detail Toompea/Old Town, Rotermann, waterfront, Kadriorg; include Town Hall, Alexander Nevsky, castle exterior, city walls/towers, St Olaf’s, Kumu exterior, TV Tower, ferry port, trams, and station.",
+    "buildScope": "Build complete walled Old Town and harbor/Rotermann hero zones, medieval roofs/walls, coast/ferries, tram/rail, collision, snow and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +163,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

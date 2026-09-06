@@ -26,8 +26,9 @@
   "memoryEvidence": null,
   "collisionEvidence": null,
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "DC building/3D data, USGS terrain, NAIP imagery, and transportation payloads are not acquired or checksum-pinned.",
+    "Required landmark exteriors have not passed provenance, redistribution, and protected-area review.",
+    "No terrain, imagery, geometry, collision, navigation, texture, or 3D Tiles package has been built.",
+    "CDN/signing credentials, physical-GPU evidence, and two-person license/visual approval are required."
   ]
 }

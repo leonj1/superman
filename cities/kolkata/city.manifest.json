@@ -3,6 +3,7 @@
   "city": "kolkata",
   "phase": 171,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 171,
+    "phaseFile": "phases/PHASE_171.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/kolkata/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire West Bengal/Kolkata terrain, imagery, building, Hooghly/wetland and municipal data before Overture/OSM; cover central city, Howrah, river, rail, port shell, and airport approach.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail BBD Bagh, Maidan, Park Street, North Kolkata sample, Howrah; include Victoria Memorial, Howrah Bridge, Writers’/High Court exteriors, Indian Museum exterior, St Paul’s, Shaheed Minar, station, trams/Metro, river ferries, and stadium.",
+    "phase-specific-topology-and-experience: Assert bridge/station/river topology, tram continuity, heritage facade set, and `city:verify --city kolkata`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

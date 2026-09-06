@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "athens",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,149 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-athens-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-athens"
+    ],
+    "imagery": [
+      "openaerialmap-athens"
+    ],
+    "roads": [
+      "overture-2026-08-19-athens-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-athens-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-athens-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 23.271952,
+        "south": 37.624436,
+        "east": 24.183728,
+        "north": 38.343084
+      },
+      "core": {
+        "west": 23.613868,
+        "south": 37.893929,
+        "east": 23.841812,
+        "north": 38.073591
+      },
+      "heroZones": [
+        {
+          "id": "acropolis-plaka",
+          "west": 23.716443,
+          "south": 37.974777,
+          "east": 23.739237,
+          "north": 37.992743,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "monastiraki",
+          "west": 23.742656099999998,
+          "south": 37.974777,
+          "east": 23.765450099999995,
+          "north": 37.992743,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Acropolis/Plaka",
+      "Monastiraki",
+      "Syntagma",
+      "Lycabettus",
+      "Piraeus"
+    ],
+    "landmarks": [
+      "Parthenon/temples under suitable rights",
+      "Agora",
+      "stadium",
+      "Parliament exterior",
+      "National Library trilogy",
+      "Stavros Niarchos exterior",
+      "port",
+      "Metro",
+      "funicular"
+    ],
+    "geography": [
+      "basin",
+      "Acropolis hills",
+      "Piraeus/sea",
+      "rail",
+      "airport corridor",
+      "mountain horizon"
+    ],
+    "waterBodies": [
+      "Piraeus/sea"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport corridor"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Greek/Athens terrain, LiDAR/photogrammetry, orthophoto, archaeology and building data before Overture/OSM; cover basin, Acropolis hills, Piraeus/sea, rail, airport corridor, and mountain horizon.",
+    "detailScope": "Detail Acropolis/Plaka, Monastiraki, Syntagma, Lycabettus, Piraeus; include Parthenon/temples under suitable rights, Agora, stadium, Parliament exterior, National Library trilogy, Stavros Niarchos exterior, port, Metro, and funicular.",
+    "buildScope": "Build Acropolis–Plaka/Agora and Syntagma–Monastiraki hero zones, archaeological-source review, white urban massing, hills, port/water, transit, collision, heat and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +161,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

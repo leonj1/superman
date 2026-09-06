@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "city": "los-angeles",
+  "creationMode": "hybrid",
+  "creationModeRationale": "Use authoritative terrain and footprints, ODbL map layers for gaps, individually licensed landmarks, and deterministic labeled proxies only where no suitable model is approved.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,12 +12,135 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "terrain": ["usgs-ca-los-angeles-b23-dem"],
+    "buildings": [
+      "la-county-lariac6-buildings-2020",
+      "overture-2026-08-19-buildings"
+    ],
+    "roadsAndRail": [
+      "overture-2026-08-19-transportation",
+      "lacmta-static-gtfs"
+    ],
+    "water": [
+      "noaa-ports-la-long-beach-shoreline-ca1804",
+      "overture-2026-08-19-base-water"
+    ],
+    "vegetation": [
+      "la-streetsla-tree-inventory",
+      "overture-2026-08-19-base-land"
+    ],
+    "imagery": ["usda-naip-california-imagery"]
+  },
+  "coordinates": {
+    "catalogAndClipCrs": "OGC:CRS84",
+    "workingHorizontalCrs": "EPSG:6340",
+    "workingVerticalCrs": "EPSG:5703",
+    "runtimeCrs": "EPSG:4978",
+    "verticalConversion": "Use a checksum-pinned NOAA/NGS geoid grid appropriate to the source epoch; abort when unavailable.",
+    "maximumRoundTripErrorMeters": 0.02
+  },
+  "extents": {
+    "metro": {
+      "bounds": [-118.959689, 33.69082, -117.630669, 34.825098],
+      "purpose": "LoD0/1 basin context including ports, airports, mountains, beaches, and ocean skirts"
+    },
+    "core": {
+      "bounds": [-118.36, 33.98, -118.14, 34.13],
+      "purpose": "LoD2 20 km central core covering Downtown, Hollywood, and Griffith"
+    },
+    "detailZones": [
+      {
+        "id": "westside",
+        "bounds": [-118.55, 33.97, -118.36, 34.11],
+        "purpose": "Beverly Hills, Century City, Venice, Santa Monica, Getty, and coast"
+      },
+      {
+        "id": "south-bay-and-ports",
+        "bounds": [-118.49, 33.68, -118.14, 33.97],
+        "purpose": "LAX, San Pedro, Long Beach ports, shoreline, and harbor infrastructure"
+      },
+      {
+        "id": "burbank",
+        "bounds": [-118.39, 34.15, -118.27, 34.23],
+        "purpose": "Burbank airport and studio corridor"
+      }
+    ],
+    "heroZones": [
+      {
+        "id": "downtown",
+        "bounds": [-118.266, 34.035, -118.235, 34.063],
+        "areaRangeSquareKilometers": [1, 4],
+        "requiredLandmarks": ["City Hall", "US Bank Tower", "Wilshire Grand"]
+      },
+      {
+        "id": "hollywood",
+        "bounds": [-118.339, 34.095, -118.318, 34.112],
+        "areaRangeSquareKilometers": [1, 4],
+        "requiredLandmarks": ["Capitol Records", "Hollywood Sign"]
+      },
+      {
+        "id": "griffith-observatory",
+        "bounds": [-118.307, 34.112, -118.292, 34.124],
+        "areaRangeSquareKilometers": [1, 4],
+        "requiredLandmarks": ["Griffith Observatory"]
+      }
+    ]
+  },
+  "requiredDistricts": [
+    "Downtown",
+    "Hollywood",
+    "Beverly Hills",
+    "Century City",
+    "Venice",
+    "Santa Monica",
+    "Griffith Park",
+    "San Pedro",
+    "Long Beach ports",
+    "LAX",
+    "Burbank"
+  ],
+  "requiredLandmarks": [
+    "City Hall",
+    "US Bank Tower",
+    "Wilshire Grand",
+    "Hollywood Sign",
+    "Griffith Observatory",
+    "Capitol Records",
+    "Getty Center",
+    "Santa Monica Pier",
+    "LAX Theme Building",
+    "Port of Los Angeles cranes"
+  ],
+  "proceduralFallbacks": {
+    "buildingMassing": "Extrude approved footprints/heights; infer missing heights by seeded district/class medians and tag inferred features.",
+    "facades": "Generate seeded PBR modules by land use, era, height, and district; never bake restricted provider imagery.",
+    "roads": "Generate carriageways, ramps, interchanges, curbs, sidewalks, markings, bridges, tunnels, and rail beds.",
+    "vegetation": "Instance species-aware trees when inventory rights permit; otherwise use seeded biome/land-cover distributions.",
+    "landmarks": "Prefer an approved model; otherwise create a dimension-checked, visibly labeled proxy and record it in exceptions.json.",
+    "ocean": "Generate georeferenced water, shoreline skirts, beaches, piers, breakwaters, and harbor surfaces.",
+    "night": "Seed emissive windows and navigation lighting by stable feature ID without temporal shimmer."
+  },
+  "conflationRules": {
+    "stableFeatureId": "sha256(source-id + source-feature-id + normalized-geometry-version)",
+    "duplicateBuildingOverlapRatio": 0.8,
+    "groundSnapMaximumMeters": 3,
+    "bridgeClearanceMinimumMeters": 4.5,
+    "waterSeamMaximumMeters": 0.25,
+    "unresolvedConflictFile": "cities/los-angeles/exceptions.json"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "spatialCellMeters": 256,
+    "heroSpatialCellMeters": 128,
+    "minimumLodCount": 3,
+    "textureFormat": "KTX2",
+    "textureMipmapsRequired": true,
+    "minimumAnisotropy": 8
   },
   "operations": [
     "verify-source-ledger",
@@ -23,13 +148,45 @@
     "transform-to-epsg-4978",
     "correct-vertical-datum",
     "clip-metro-core-and-hero-zones",
+    "assign-stable-feature-lineage",
     "repair-topology-and-conflate-by-priority",
+    "generate-terrain-shoreline-roads-rail-and-water",
+    "generate-procedural-buildings-facades-roofs-and-vegetation",
+    "integrate-approved-landmarks-or-labeled-proxies",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
+    "run-la-traversal-and-visual-evidence-suites",
     "validate-and-sign-manifest"
   ],
+  "qualityGates": {
+    "minimumCoreCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumRenderScaleHigh": 0.95,
+    "missingTexturePixels": 0
+  },
+  "performanceGates": {
+    "resolution": [2560, 1440],
+    "profile": "High",
+    "minimumMedianFps": 60,
+    "maximumP95FrameMs": 18.2,
+    "maximumP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "softwareRendererMayCertify": false,
+    "soakMinutes": 30,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

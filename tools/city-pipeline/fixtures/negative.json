@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "base": {
+    "geometry": { "authoritative": true, "previewOnly": false },
+    "authority": { "city": "fixture-city" },
+    "terrain": { "valid": true, "datumValid": true },
+    "visual": {
+      "ssim": 0.99,
+      "blankPixelRatio": 0,
+      "missingTexturePixels": 0,
+      "blockinessPassed": true
+    },
+    "landmarks": { "missingOrUnlabeledProxy": 0 },
+    "collision": { "authoritativeGaps": 0 },
+    "licenses": { "allApproved": true },
+    "performance": {
+      "decodedGpuMegabytes": 1000,
+      "p95FrameMs": 16,
+      "maxConsecutiveOver33Ms": 0
+    },
+    "streaming": { "coldHeroReadySeconds": 5 }
+  },
+  "cases": [
+    {
+      "name": "missing geometry",
+      "patch": { "geometry": { "authoritative": false, "previewOnly": false } },
+      "expected": "missing-geometry"
+    },
+    {
+      "name": "coordinate preview",
+      "patch": { "geometry": { "authoritative": false, "previewOnly": true } },
+      "expected": "coordinate-only-preview"
+    },
+    {
+      "name": "stale authority",
+      "patch": { "authority": { "city": "other-city" } },
+      "expected": "stale-authority"
+    },
+    {
+      "name": "invalid terrain",
+      "patch": { "terrain": { "valid": false, "datumValid": true } },
+      "expected": "invalid-terrain"
+    },
+    {
+      "name": "bad datum",
+      "patch": { "terrain": { "valid": true, "datumValid": false } },
+      "expected": "bad-datum"
+    },
+    {
+      "name": "blurred texture",
+      "patch": { "visual": { "ssim": 0.7 } },
+      "expected": "blurred-texture"
+    },
+    {
+      "name": "blank texture",
+      "patch": { "visual": { "blankPixelRatio": 0.8 } },
+      "expected": "blank-texture"
+    },
+    {
+      "name": "missing texture",
+      "patch": { "visual": { "missingTexturePixels": 10 } },
+      "expected": "missing-texture"
+    },
+    {
+      "name": "block-compressed texture",
+      "patch": { "visual": { "blockinessPassed": false } },
+      "expected": "blocky-texture"
+    },
+    {
+      "name": "missing landmark",
+      "patch": { "landmarks": { "missingOrUnlabeledProxy": 1 } },
+      "expected": "missing-landmark-or-proxy"
+    },
+    {
+      "name": "collision hole",
+      "patch": { "collision": { "authoritativeGaps": 1 } },
+      "expected": "collision-hole"
+    },
+    {
+      "name": "forbidden license",
+      "patch": { "licenses": { "allApproved": false } },
+      "expected": "license-violation"
+    },
+    {
+      "name": "oversized GPU asset",
+      "patch": { "performance": { "decodedGpuMegabytes": 1600 } },
+      "expected": "oversized-gpu-asset"
+    },
+    {
+      "name": "slow tile",
+      "patch": { "streaming": { "coldHeroReadySeconds": 9 } },
+      "expected": "slow-tile"
+    },
+    {
+      "name": "janky trace",
+      "patch": {
+        "performance": { "p95FrameMs": 22, "maxConsecutiveOver33Ms": 3 }
+      },
+      "expected": "janky-trace"
+    }
+  ]
+}

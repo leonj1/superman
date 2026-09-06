@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "vancouver",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,151 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-vancouver-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-vancouver"
+    ],
+    "imagery": [
+      "openaerialmap-vancouver"
+    ],
+    "roads": [
+      "overture-2026-08-19-vancouver-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-vancouver-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-vancouver-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -123.669806,
+        "south": 48.890336,
+        "east": -122.568874,
+        "north": 49.608984
+      },
+      "core": {
+        "west": -123.256956,
+        "south": 49.159829,
+        "east": -122.981724,
+        "north": 49.339491
+      },
+      "heroZones": [
+        {
+          "id": "downtown",
+          "west": -123.133102,
+          "south": 49.240677,
+          "east": -123.105578,
+          "north": 49.258643,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "gastown",
+          "west": -123.10144939999999,
+          "south": 49.240677,
+          "east": -123.0739254,
+          "north": 49.258643,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Downtown",
+      "Gastown",
+      "Coal Harbour",
+      "Granville Island",
+      "Stanley Park"
+    ],
+    "landmarks": [
+      "Canada Place",
+      "Harbour Centre",
+      "convention center",
+      "Lions Gate/Burrard bridges",
+      "Science World",
+      "stadiums",
+      "seaplanes",
+      "ferries",
+      "Steam Clock streetscape"
+    ],
+    "geography": [
+      "Downtown peninsula",
+      "False Creek",
+      "Stanley Park",
+      "North Shore context",
+      "YVR approach",
+      "mountain terrain"
+    ],
+    "waterBodies": [
+      "North Shore context"
+    ],
+    "bridges": [
+      "Lions Gate/Burrard bridges"
+    ],
+    "airports": [
+      "YVR approach"
+    ],
+    "transitModes": [
+      "roads",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Vancouver/Metro open 3D/LiDAR/orthophoto data and Overture/OSM; cover Downtown peninsula, False Creek, Stanley Park, North Shore context, YVR approach, and mountain terrain.",
+    "detailScope": "Detail Downtown, Gastown, Coal Harbour, Granville Island, Stanley Park; include Canada Place, Harbour Centre, convention center, Lions Gate/Burrard bridges, Science World, stadiums, seaplanes, ferries, and Steam Clock streetscape.",
+    "buildScope": "Build Gastown–Canada Place and False Creek/Granville hero zones, seawalls, mountain/water terrain, bridges, dense vegetation, transit/ferry routes, collision, and wet/night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +163,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

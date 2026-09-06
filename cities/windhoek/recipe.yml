@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "windhoek",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,142 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-windhoek-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-windhoek"
+    ],
+    "imagery": [
+      "openaerialmap-windhoek"
+    ],
+    "roads": [
+      "overture-2026-08-19-windhoek-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-windhoek-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-windhoek-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 16.694133,
+        "south": -22.918734,
+        "east": 17.472327,
+        "north": -22.200086
+      },
+      "core": {
+        "west": 16.985956,
+        "south": -22.649241,
+        "east": 17.180504,
+        "north": -22.469579
+      },
+      "heroZones": [
+        {
+          "id": "center",
+          "west": 17.073503,
+          "south": -22.568393,
+          "east": 17.092957,
+          "north": -22.550427,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "government-district",
+          "west": 17.095875099999997,
+          "south": -22.568393,
+          "east": 17.115329099999997,
+          "north": -22.550427,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "center",
+      "government district",
+      "Klein Windhoek"
+    ],
+    "landmarks": [
+      "Christ Church",
+      "Independence Memorial exterior",
+      "Tintenpalast exterior",
+      "Alte Feste",
+      "station",
+      "Supreme Court exterior",
+      "modern towers",
+      "hilltop landmarks"
+    ],
+    "geography": [
+      "central basin/hills",
+      "airport corridors",
+      "rail",
+      "surrounding ridges"
+    ],
+    "waterBodies": [],
+    "bridges": [],
+    "airports": [
+      "airport corridors"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Namibia/Windhoek high-resolution terrain, imagery, building and municipal data before Overture/OSM; cover central basin/hills, airport corridors, rail, and surrounding ridges.",
+    "detailScope": "Detail center, government district, Klein Windhoek; include Christ Church, Independence Memorial exterior, Tintenpalast exterior, Alte Feste, station, Supreme Court exterior, modern towers, and hilltop landmarks.",
+    "buildScope": "Build Independence Avenue–historic core and hill viewpoint hero zones, arid mountain terrain, German-colonial/modern facades, rail/roads, sparse vegetation, collision, heat and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +154,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

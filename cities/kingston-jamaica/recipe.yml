@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "kingston-jamaica",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,146 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-kingston-jamaica-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-kingston-jamaica"
+    ],
+    "imagery": [
+      "openaerialmap-kingston-jamaica"
+    ],
+    "roads": [
+      "overture-2026-08-19-kingston-jamaica-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-kingston-jamaica-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-kingston-jamaica-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -77.17139,
+        "south": 17.637696,
+        "east": -76.41577,
+        "north": 18.356344
+      },
+      "core": {
+        "west": -76.888032,
+        "south": 17.907189,
+        "east": -76.699128,
+        "north": 18.086851
+      },
+      "heroZones": [
+        {
+          "id": "downtown",
+          "west": -76.803025,
+          "south": 17.988037,
+          "east": -76.784135,
+          "north": 18.006003,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "new-kingston",
+          "west": -76.78130150000001,
+          "south": 17.988037,
+          "east": -76.76241150000001,
+          "north": 18.006003,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Downtown",
+      "New Kingston",
+      "Devon House",
+      "waterfront",
+      "Port Royal"
+    ],
+    "landmarks": [
+      "National Gallery",
+      "Emancipation Park",
+      "stadium",
+      "historic forts",
+      "port cranes",
+      "airport",
+      "mountain skyline"
+    ],
+    "geography": [
+      "Downtown",
+      "New Kingston",
+      "harbor",
+      "Port Royal",
+      "airport approach",
+      "Blue Mountain terrain"
+    ],
+    "waterBodies": [
+      "harbor"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ],
+    "acquireScope": "Acquire Jamaican/municipal terrain, imagery, building and Overture/OSM data; cover Downtown, New Kingston, harbor, Port Royal, airport approach, and Blue Mountain terrain.",
+    "detailScope": "Detail Downtown, New Kingston, Devon House, waterfront, Port Royal; include National Gallery, Emancipation Park, stadium, historic forts, port cranes, airport, and mountain skyline.",
+    "buildScope": "Build Downtown waterfront and New Kingston hero zones, steep mountain terrain, harbor/port, roads, tropical vegetation, collision, haze and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +158,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

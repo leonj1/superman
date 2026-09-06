@@ -3,6 +3,7 @@
   "city": "tehran",
   "phase": 143,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 143,
+    "phaseFile": "phases/PHASE_143.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/tehran/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire lawful Iranian/Tehran terrain, imagery, building and heritage sources with sanctions/export review before Overture/OSM; cover central city, Alborz foothills, rail, airport corridors, and parks without sensitive infrastructure.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Grand Bazaar/Golestan exterior, central civic, Valiasr, northern hills; include Azadi Tower, Milad Tower, Tabiat Bridge, Golestan public exterior, National Museum exterior, railway station, Metro entrances, parks, and mountain skyline.",
+    "phase-specific-topology-and-experience: Assert sanctions/security/source compliance, Alborz silhouette, tower/bridge/Metro geometry, and `city:verify --city tehran`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

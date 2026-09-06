@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "city": "islamabad-rawalpindi",
+  "phase": 181,
+  "exceptions": [
+    {
+      "id": "official-source-discovery",
+      "severity": "build-blocking",
+      "status": "open",
+      "sourceIds": [
+        "islamabad-rawalpindi-official-data-discovery"
+      ],
+      "description": "Acquire Pakistan/CDA terrain, imagery, building and municipal data with security review before Overture/OSM; cover public Islamabad sectors, Margalla Hills, Rawalpindi center shell, rail, and airport corridor without sensitive sites.",
+      "resolution": "Identify authoritative publisher endpoints, verify exact licenses and coverage, then acquire and hash every selected artifact."
+    },
+    {
+      "id": "global-baseline-rights-and-extracts",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [
+        "overture-global-buildings",
+        "overture-global-transportation",
+        "overture-global-base"
+      ],
+      "description": "No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+      "resolution": "Pin one release and extraction query; approve ODbL isolation, source-field attribution, notices, and redistribution mechanics."
+    },
+    {
+      "id": "terrain-imagery-fidelity",
+      "severity": "content-blocking",
+      "status": "open",
+      "sourceIds": [
+        "copernicus-dem-glo30",
+        "copernicus-sentinel-2-l2a"
+      ],
+      "description": "Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+      "resolution": "Acquire authoritative local elevation and orthophotos plus lawful facade references; reject fabricated detail and consumer imagery."
+    },
+    {
+      "id": "landmarks-and-cultural-controls",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [
+        "islamabad-rawalpindi-landmark-model-discovery"
+      ],
+      "description": "Detail Blue Area, public civic/cultural zones, Saidpur, Rawalpindi bazaar sample; include Faisal Mosque, Pakistan Monument, Centaurus exterior where licensed, Supreme Court/Parliament public exteriors as permitted, Daman-e-Koh, Metrobus, station, and airport shell.",
+      "resolution": "Acquire exact licensed models and required cultural/security permissions, or use visibly labeled validated proxies and exclusion masks."
+    },
+    {
+      "id": "phase-specific-topology-and-experience",
+      "severity": "verification-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "Assert security exclusion masks, sector/terrain geometry, mosque/monument permissions, airport/transit, and `city:verify --city islamabad-rawalpindi`.",
+      "resolution": "Build the immutable candidate, run city-specific traversal/topology assertions, and attach raw visual, collision, and route evidence."
+    },
+    {
+      "id": "package-hosting-signing",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+      "resolution": "Run the pinned pipeline only after source clearance, stage content-addressed artifacts, sign the manifest, and verify public HTTP behavior."
+    },
+    {
+      "id": "physical-performance-and-approvals",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist.",
+      "resolution": "After content freeze, run the 2560x1440 High traversal and soak suites on named hardware and retain signed raw evidence and approvals."
+    }
+  ]
+}

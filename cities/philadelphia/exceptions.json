@@ -1,0 +1,9 @@
+{"schemaVersion": 1, "city": "philadelphia", "generatedAt": "2026-09-05", "exceptions": [
+  {"id": "city-data-rights-unconfirmed", "severity": "release-blocking", "system": "buildings", "detail": "Philadelphia datasets need item-level commercial redistribution confirmation and exact hashes."},
+  {"id": "terrain-not-acquired", "severity": "release-blocking", "system": "terrain", "detail": "No 2022 LiDAR or USGS tile manifest, payload, datum metadata, or hashes exist."},
+  {"id": "imagery-not-acquired", "severity": "release-blocking", "system": "imagery", "detail": "No lawful complete orthophoto/NAIP scene manifest or hashes exist; aerial imagery is below hero-facade density."},
+  {"id": "base-layers-not-acquired", "severity": "release-blocking", "system": "geometry", "detail": "Road, river, bridge, park, and transit extracts are absent due disk constraints."},
+  {"id": "landmarks-unlicensed", "severity": "release-blocking", "system": "landmarks", "detail": "Required models have not passed item-level provenance and redistribution review."},
+  {"id": "no-derived-artifacts", "severity": "release-blocking", "system": "packaging", "detail": "No runtime, collision, navigation, texture, SBOM, signature, or evidence artifacts exist."},
+  {"id": "no-release-environment", "severity": "release-blocking", "system": "certification", "detail": "CDN/signing credentials, two-person approvals, and named physical-GPU hardware are unavailable."}
+]}

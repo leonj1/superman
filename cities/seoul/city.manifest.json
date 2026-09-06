@@ -3,6 +3,7 @@
   "city": "seoul",
   "phase": 149,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 149,
+    "phaseFile": "phases/PHASE_149.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/seoul/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Seoul open digital-twin/3D, national terrain, orthophoto and building data before Overture/OSM; cover all districts at shell LoD, Han River, mountains, rail, and Gimpo/Incheon corridors.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Jongno/palaces, Myeongdong, Gangnam, Hongdae, Yeouido, Dongdaemun; include Gyeongbokgung public exterior, city gates, N Seoul Tower, Lotte World Tower, DDP, 63 Building, stadiums, Han bridges, subway/rail stations, and Cheonggyecheon.",
+    "phase-specific-topology-and-experience: Assert district/river/bridge coverage, palace-wall and supertall silhouettes, subway/station density, and `city:verify --city seoul`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

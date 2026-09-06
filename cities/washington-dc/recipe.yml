@@ -1,41 +1,55 @@
 {
   "schemaVersion": 1,
   "city": "washington-dc",
+  "creationMode": "hybrid",
+  "creationRationale": "No approved current citywide 3D model has been acquired. Generate baseline geometry from approved public/open GIS sources and replace monuments only with survey-accurate, redistributable exterior models.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
-  "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
-    "roads",
-    "water",
-    "vegetation"
-  ],
-  "targets": {
-    "metroRadiusKm": 40,
-    "coreRadiusKm": 10,
-    "minimumHeroZones": 2,
-    "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+  "requiredSourceRoles": ["building-footprints", "terrain-hires", "imagery", "roads", "water", "vegetation", "transit", "landmark-models"],
+  "coordinates": {
+    "workingHorizontal": "EPSG:26985",
+    "workingVertical": "NAVD88 metres after product-specific geoid validation",
+    "runtime": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05,
+    "verticalTransform": "checksum-pinned NOAA GEOID18/VDatum grid selected from source metadata"
   },
-  "operations": [
-    "verify-source-ledger",
-    "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
-    "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
-    "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
-  ],
-  "budgets": {
-    "visibleTriangles": 8000000,
-    "drawCalls": 2000,
-    "decodedGpuMegabytes": 1536,
-    "cpuHeapMegabytes": 1024,
-    "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
-  }
+  "extents": {
+    "metroBbox": [-77.498051, 38.535786, -76.574689, 39.254434],
+    "coreBbox": [-77.15179, 38.805279, -76.92095, 38.984941],
+    "heroZones": [
+      {"id": "mall-tidal-basin", "bbox": [-77.0555, 38.879, -77.0038, 38.9025], "minimumAreaSquareKilometers": 4, "includes": ["National Mall", "Washington Monument", "Lincoln Memorial", "Jefferson Memorial", "Smithsonian exteriors"]},
+      {"id": "georgetown-waterfront", "bbox": [-77.0815, 38.895, -77.048, 38.915], "minimumAreaSquareKilometers": 2, "includes": ["Georgetown", "Potomac waterfront", "Key Bridge", "C&O Canal"]}
+    ]
+  },
+  "targets": {"metroRadiusKm": 40, "coreRadiusKm": 10, "minimumHeroZones": 2, "format": "3d-tiles-1.1", "payload": "glTF-2.0", "lodBands": {"metro": [0, 1], "core": [0, 1, 2], "hero": [0, 1, 2, 3]}},
+  "sourcePriority": {
+    "terrain": ["usgs-3dep-washington-dc"],
+    "buildings": ["approved-landmark-model", "dc-open-data-buildings", "overture-building", "procedural-proxy"],
+    "imagery": ["usgs-naip-washington-dc"],
+    "roadsAndWater": ["dc-authoritative-layer", "noaa-potomac-anacostia-shoreline", "overture-washington-dc-2026-08-19.0"],
+    "transit": ["approved-wmata-snapshot", "overture-segment"],
+    "vegetation": ["approved-dc-or-nps-park-layer", "procedural-biome"]
+  },
+  "requiredDistricts": ["National Mall", "Capitol Hill", "Downtown", "Georgetown", "Arlington"],
+  "requiredSystems": ["Potomac River", "Anacostia River", "Tidal Basin", "DCA approach", "Metro portals", "Key Bridge", "Arlington Memorial Bridge", "height-limit skyline", "protected-area exclusions"],
+  "requiredLandmarks": ["U.S. Capitol exterior", "White House exterior", "Washington Monument", "Lincoln Memorial", "Jefferson Memorial", "Smithsonian exteriors", "Pentagon exterior", "Union Station"],
+  "proceduralFallbacks": {"buildingMassing": true, "facades": true, "roofForms": true, "streetFurniture": true, "vegetation": true, "landmarkProxy": "only when public, exterior-only, explicitly labeled, and silhouette-validated", "imagery": false, "terrain": false},
+  "protectedAreaPolicy": {"exteriorsOnly": true, "interiors": false, "nonpublicSecurityGeometry": false, "airspaceRestrictionsRepresentedAsGameplaySafetyVolumes": true},
+  "operations": ["verify-source-ledger-and-cache-checksums", "download-checksum-pinned-inputs", "transform-to-epsg-26985", "convert-navd88-to-epsg-4978", "assign-stable-source-prefixed-feature-ids", "clip-metro-core-and-two-hero-zones", "repair-potomac-anacostia-road-and-building-topology", "conflate-by-declared-feature-priority", "enforce-height-limit-and-protected-area-policy", "generate-procedural-massing-roofs-and-facades", "replace-proxies-with-approved-landmark-exteriors", "generate-lod0-lod1-lod2-lod3", "generate-simplified-collision-and-navigation", "validate-axial-alignments-bridge-clearance-and-dca-approach", "compress-meshes-and-ktx2-textures", "tile-spatially-and-write-bounding-volumes", "run-washington-dc-deterministic-traversal-suite", "validate-and-sign-manifest"],
+  "validation": {
+    "minimumCoreCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "minimumHighResolutionScale": 0.95,
+    "requiredNamedRoutes": ["mall-axis-walk", "tidal-basin-walk", "georgetown-waterfront-walk", "potomac-flight", "dca-approach", "capitol-union-station-flight"]
+  },
+  "budgets": {"visibleTriangles": 8000000, "drawCalls": 2000, "decodedGpuMegabytes": 1536, "cpuHeapMegabytes": 1024, "maximumTextureDimension": 8192, "minimumLodCount": 3}
 }

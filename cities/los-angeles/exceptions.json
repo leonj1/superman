@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "city": "los-angeles",
+  "unresolved": [
+    {
+      "id": "lariac6-derived-mesh-rights",
+      "category": "license",
+      "sourceId": "la-county-lariac6-buildings-2020",
+      "resolution": "Obtain human approval for transformed and redistributed 3D mesh derivatives."
+    },
+    {
+      "id": "hero-imagery-rights-and-resolution",
+      "category": "source",
+      "sourceId": "usda-naip-california-imagery",
+      "resolution": "Pin a dated orthomosaic and acquire lawful facade references or procedural materials."
+    },
+    {
+      "id": "overture-derived-database-obligations",
+      "category": "license",
+      "sourceId": "overture-2026-08-19-buildings",
+      "resolution": "Approve the ODbL publication, attribution, and derivative-database offer design."
+    },
+    {
+      "id": "landmark-models",
+      "category": "content",
+      "sourceId": null,
+      "resolution": "Acquire each landmark model or register a visibly labeled procedural proxy."
+    },
+    {
+      "id": "physical-gpu-certification",
+      "category": "evidence",
+      "sourceId": null,
+      "resolution": "Run 2560×1440 High traversal on named hardware and attach signed raw frame times."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "hamburg",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,153 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-hamburg-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-hamburg"
+    ],
+    "imagery": [
+      "openaerialmap-hamburg"
+    ],
+    "roads": [
+      "overture-2026-08-19-hamburg-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-hamburg-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-hamburg-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 9.388209,
+        "south": 53.191406,
+        "east": 10.597831,
+        "north": 53.910054
+      },
+      "core": {
+        "west": 9.841817,
+        "south": 53.460899,
+        "east": 10.144223,
+        "north": 53.640561
+      },
+      "heroZones": [
+        {
+          "id": "altstadt",
+          "west": 9.9779,
+          "south": 53.541747,
+          "east": 10.00814,
+          "north": 53.559713,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "speicherstadt-hafencity",
+          "west": 10.012675999999999,
+          "south": 53.541747,
+          "east": 10.042915999999998,
+          "north": 53.559713,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Altstadt",
+      "Speicherstadt/HafenCity",
+      "St Pauli",
+      "Alster"
+    ],
+    "landmarks": [
+      "Elbphilharmonie",
+      "Rathaus",
+      "St Michael’s",
+      "Chilehaus",
+      "Landungsbrücken",
+      "port cranes/terminals",
+      "Köhlbrand Bridge",
+      "tunnels",
+      "U/S-Bahn",
+      "ferries",
+      "ships"
+    ],
+    "geography": [
+      "Elbe/Alster",
+      "port",
+      "Speicherstadt",
+      "rail",
+      "airport",
+      "harbor approaches"
+    ],
+    "waterBodies": [
+      "harbor approaches"
+    ],
+    "bridges": [
+      "Köhlbrand Bridge"
+    ],
+    "airports": [
+      "airport",
+      "harbor approaches"
+    ],
+    "transitModes": [
+      "roads",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Hamburg official LoD2/3D, LiDAR, terrain, bathymetry and orthophoto sources before Overture/OSM; cover Elbe/Alster, port, Speicherstadt, rail, airport, and harbor approaches.",
+    "detailScope": "Detail Altstadt, Speicherstadt/HafenCity, St Pauli, Alster; include Elbphilharmonie, Rathaus, St Michael’s, Chilehaus, Landungsbrücken, port cranes/terminals, Köhlbrand Bridge, tunnels, U/S-Bahn, ferries, and ships.",
+    "buildScope": "Build Speicherstadt–Elbphilharmonie and Rathaus/Alster hero zones, brick warehouses/canals, tidal Elbe/port routes, bridges/tunnels, collision, wet and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +165,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

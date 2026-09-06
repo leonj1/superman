@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "sofia",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,146 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-sofia-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-sofia"
+    ],
+    "imagery": [
+      "openaerialmap-sofia"
+    ],
+    "roads": [
+      "overture-2026-08-19-sofia-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-sofia-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-sofia-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 22.835236,
+        "south": 42.338186,
+        "east": 23.813064,
+        "north": 43.056834
+      },
+      "core": {
+        "west": 23.201921,
+        "south": 42.607679,
+        "east": 23.446379,
+        "north": 42.787341
+      },
+      "heroZones": [
+        {
+          "id": "largo",
+          "west": 23.311927,
+          "south": 42.688527,
+          "east": 23.336373,
+          "north": 42.706493,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "cathedral-center",
+          "west": 23.340039899999997,
+          "south": 42.688527,
+          "east": 23.364485899999995,
+          "north": 42.706493,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Largo",
+      "cathedral/center",
+      "Serdica ruins context",
+      "National Palace district"
+    ],
+    "landmarks": [
+      "Alexander Nevsky",
+      "Parliament exterior",
+      "St George rotunda",
+      "National Theatre",
+      "Palace of Culture",
+      "Banya Bashi exterior",
+      "TV tower",
+      "Metro portals",
+      "trams",
+      "station"
+    ],
+    "geography": [
+      "center",
+      "Vitosha-facing basin",
+      "rail",
+      "airport approach",
+      "parks"
+    ],
+    "waterBodies": [],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Bulgarian/Sofia official LiDAR, terrain, orthophoto and 3D/building data before Overture/OSM; cover center, Vitosha-facing basin, rail, airport approach, and parks.",
+    "detailScope": "Detail Largo, cathedral/center, Serdica ruins context, National Palace district; include Alexander Nevsky, Parliament exterior, St George rotunda, National Theatre, Palace of Culture, Banya Bashi exterior, TV tower, Metro portals, trams, and station.",
+    "buildScope": "Build cathedral–Largo/Serdica and NDK/Vitosha Boulevard hero zones, mountain horizon, archaeological layers, transit, vegetation, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +158,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

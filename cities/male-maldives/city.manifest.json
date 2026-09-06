@@ -3,6 +3,7 @@
   "city": "male-maldives",
   "phase": 178,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 178,
+    "phaseFile": "phases/PHASE_178.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/male-maldives/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Maldives/Malé high-resolution coast, bathymetry, imagery and building data before Overture/OSM; cover Malé, Hulhumalé, airport island, bridges, reefs, harbor and ferries.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail central Malé, waterfront, fish market/harbor, Hulhumalé; include Grand Friday Mosque exterior, Mulee Aage public exterior, memorials, stadium, Sinamalé Bridge, airport, ferry terminals, seawalls, and dense rooftops.",
+    "phase-specific-topology-and-experience: Assert island/reclamation/reef topology, sea-level datum, bridge/airport/ferry routes, and `city:verify --city male-maldives`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

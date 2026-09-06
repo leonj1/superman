@@ -1,35 +1,230 @@
 {
   "schemaVersion": 1,
   "city": "agra",
+  "phase": 175,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      77.61273,
+      26.824006,
+      78.42061,
+      27.542654
+    ],
+    "coreBbox": [
+      77.915685,
+      27.093499,
+      78.117655,
+      27.273161
+    ],
+    "heroZones": [
+      {
+        "id": "taj-mahal-public-exterior-complex-hero",
+        "name": "Taj Mahal public exterior complex",
+        "bbox": [
+          78.00228,
+          27.178838,
+          78.017427,
+          27.187822
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Taj–river/Mehtab and Fort hero zones only with approved survey/heritage assets, precise symmetry/water gardens, river/terrain, collision boundaries, haze and day/night materials."
+      },
+      {
+        "id": "agra-fort-hero",
+        "name": "Agra Fort",
+        "bbox": [
+          78.015913,
+          27.178838,
+          78.03106,
+          27.187822
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Taj Mahal public exterior complex, Agra Fort, riverfront gardens, old market approach; include Itmad-ud-Daulah exterior, Mehtab Bagh, gateways, walls, station, bridges, and riverfront under archaeological rules."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "agra-official-data-discovery"
+    ],
+    "buildings": [
+      "agra-landmark-model-discovery",
+      "agra-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "agra-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "agra-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "agra-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "agra-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "agra-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Taj Mahal public exterior complex",
+      "Agra Fort",
+      "riverfront gardens",
+      "old market approach"
+    ],
+    "landmarks": [
+      "Itmad-ud-Daulah exterior",
+      "Mehtab Bagh",
+      "gateways",
+      "walls",
+      "station",
+      "bridges",
+      "riverfront under archaeological rules"
+    ],
+    "geography": [
+      "Taj/fort public areas",
+      "old city shell",
+      "river",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "river"
+    ],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Indian/UP terrain, imagery, building, Yamuna and protected-monument sources before Overture/OSM; cover Taj/fort public areas, old city shell, river, rail, and airport approach.",
+    "detail": "Detail Taj Mahal public exterior complex, Agra Fort, riverfront gardens, old market approach; include Itmad-ud-Daulah exterior, Mehtab Bagh, gateways, walls, station, bridges, and riverfront under archaeological rules.",
+    "build": "Build Taj–river/Mehtab and Fort hero zones only with approved survey/heritage assets, precise symmetry/water gardens, river/terrain, collision boundaries, haze and day/night materials.",
+    "assertion": "Assert written monument/source permission, Taj geometry/axis/reflection, river/fort placement, restricted camera rules, and `city:verify --city agra`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-agra-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

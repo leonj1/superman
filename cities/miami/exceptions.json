@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "city": "miami",
+  "exceptions": [
+    {
+      "id": "no-official-3d-city-model",
+      "severity": "design-decision",
+      "status": "open",
+      "sourceIds": ["overture-2026-08-19-miami-buildings"],
+      "description": "No complete official 3D city model with explicit redistribution rights was found.",
+      "resolution": "Generate deterministic building massing from approved footprints and LiDAR; import only separately licensed landmarks."
+    },
+    {
+      "id": "miami-dade-source-rights",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [
+        "miami-dade-building-footprints-2024",
+        "miami-dade-lidar-and-orthophoto"
+      ],
+      "description": "County GIS pages provide public access and copyright attribution but no explicit derivative redistribution grant.",
+      "resolution": "Obtain written reuse terms for exact deliveries or exclude County bytes and use approved public-domain/ODbL fallbacks."
+    },
+    {
+      "id": "coastal-vertical-datums",
+      "severity": "build-blocking",
+      "status": "open",
+      "sourceIds": [
+        "usgs-3dep-miami-current",
+        "noaa-biscayne-bay-s200-bathymetry"
+      ],
+      "description": "Topography and bathymetry use work-unit NAVD88 and MLLW vertical datums that cannot be merged directly.",
+      "resolution": "Pin GEOID18 and NOAA VDatum transformations, record grids and versions, and validate coastal control points before meshing."
+    },
+    {
+      "id": "shoreline-temporal-conflation",
+      "severity": "conflation-required",
+      "status": "open",
+      "sourceIds": [
+        "noaa-biscayne-bay-s200-bathymetry",
+        "overture-2026-08-19-miami-water",
+        "usda-naip-florida-current"
+      ],
+      "description": "Bathymetry, coastline vectors, and imagery have different capture dates and water levels.",
+      "resolution": "Declare a shoreline priority and tide epoch, generate skirts, and fail validation for gaps above one meter."
+    },
+    {
+      "id": "art-deco-and-landmark-models",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No licensed hero models or facade reference package exists for the Art Deco district and named landmarks.",
+      "resolution": "Acquire exact licensed models/references or create clearly labeled deterministic proxies; obtain independent visual approval."
+    },
+    {
+      "id": "port-and-water-routes",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No approved, checksum-pinned PortMiami cruise, marina, boat, or channel route source has been acquired.",
+      "resolution": "Acquire authoritative route/channel data or create non-navigational illustrative routes from approved geometry with clear labeling."
+    },
+    {
+      "id": "physical-performance-certification",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No 2560x1440 High-profile measurements exist from a named physical release GPU.",
+      "resolution": "Run the protected traversal suite on named hardware after final artifacts are immutable; software rendering cannot certify release."
+    }
+  ]
+}

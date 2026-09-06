@@ -1,35 +1,100 @@
 {
   "schemaVersion": 1,
   "city": "boston",
+  "creationMode": "hybrid",
+  "creationRationale": "Prefer Boston Planning's tiled official 3D Smart Model where its rights, freshness, and geometry pass; procedurally complete Cambridge, inner metro, updated buildings, transportation, water, vegetation, and missing detail from approved GIS sources.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
-  "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
-    "roads",
-    "water",
-    "vegetation"
-  ],
+  "requiredSourceRoles": ["city-model", "terrain-hires", "imagery", "roads", "water", "vegetation", "transit", "landmark-models"],
+  "coordinates": {
+    "workingHorizontal": "EPSG:26986",
+    "workingVertical": "NAVD88 metres after product-specific geoid validation",
+    "runtime": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05,
+    "verticalTransform": "Use a checksum-pinned NOAA GEOID18/VDatum grid selected from each source product's metadata"
+  },
+  "extents": {
+    "metroBbox": [-71.546037, 41.999106, -70.573503, 42.717754],
+    "coreBbox": [-71.181337, 42.268599, -70.938203, 42.448261],
+    "heroZones": [
+      {
+        "id": "freedom-trail-waterfront",
+        "bbox": [-71.0719, 42.352, -71.045, 42.3695],
+        "minimumAreaSquareKilometers": 2,
+        "includes": ["Freedom Trail", "State House", "Faneuil Hall", "Custom House", "waterfront", "USS Constitution approach"]
+      },
+      {
+        "id": "back-bay-common",
+        "bbox": [-71.091, 42.345, -71.059, 42.36],
+        "minimumAreaSquareKilometers": 2,
+        "includes": ["Boston Common", "Public Garden", "Back Bay", "Prudential Tower", "Hancock Tower", "brownstone streets"]
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {"metro": [0, 1], "core": [0, 1, 2], "hero": [0, 1, 2, 3]}
+  },
+  "sourcePriority": {
+    "cityModel": ["approved-boston-planning-tile", "massgis-building-structures-2026-05", "overture-building", "procedural-proxy"],
+    "terrain": ["massgis-lidar-central-eastern-ma-2021"],
+    "imagery": ["massgis-aerial-imagery-2025-zone19"],
+    "roadsAndWater": ["massgis-authoritative-layer", "noaa-boston-shoreline-and-harbor", "overture-boston-2026-08-19.0"],
+    "transit": ["massgis-mbta-rapid-transit-2025-11", "massgis-trains-2025-10"],
+    "vegetation": ["massgis-open-space-2026-07", "procedural-biome"]
+  },
+  "requiredDistricts": ["Downtown", "Back Bay", "Beacon Hill", "Seaport", "Fenway", "Harvard/MIT"],
+  "requiredSystems": ["Boston Harbor islands", "Charles River", "Logan approach", "historic street fabric", "MBTA portals", "rail and ferry routes", "Zakim Bridge clearance"],
+  "requiredLandmarks": ["Massachusetts State House", "Faneuil Hall", "Custom House Tower", "Prudential Tower", "200 Clarendon", "Fenway Park", "Zakim Bridge", "USS Constitution"],
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "brickAndBrownstoneFacades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "only when explicitly labeled and silhouette-validated",
+    "imagery": false,
+    "terrain": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "transform-to-epsg-26986",
+    "convert-source-heights-to-navd88-then-epsg-4978",
+    "assign-stable-source-prefixed-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-harbor-river-road-and-building-topology",
+    "conflate-by-declared-feature-priority",
+    "preserve-historic-street-and-block-fabric",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-simplified-collision-and-navigation",
+    "validate-bridge-transit-portal-and-logan-clearance",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
+    "run-boston-deterministic-traversal-suite",
     "validate-and-sign-manifest"
   ],
+  "validation": {
+    "minimumCoreCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "minimumHighResolutionScale": 0.95,
+    "requiredNamedRoutes": ["freedom-trail-walk", "waterfront-walk", "back-bay-common-walk", "charles-river-flight", "logan-approach", "zakim-bridge-flight"]
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

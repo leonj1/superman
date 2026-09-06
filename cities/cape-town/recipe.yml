@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "cape-town",
+  "creationMode": "hybrid",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,153 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "official-city-source-candidate",
+      "overture-2026-08-19-cape-town-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-cape-town"
+    ],
+    "imagery": [
+      "openaerialmap-cape-town"
+    ],
+    "roads": [
+      "overture-2026-08-19-cape-town-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-cape-town-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-cape-town-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 17.990174,
+        "south": -34.285164,
+        "east": 18.856266,
+        "north": -33.566516
+      },
+      "core": {
+        "west": 18.314959,
+        "south": -34.015671,
+        "east": 18.531481,
+        "north": -33.836009
+      },
+      "heroZones": [
+        {
+          "id": "cbd-company-s-garden",
+          "west": 18.412394,
+          "south": -33.934823,
+          "east": 18.434046,
+          "north": -33.916857,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "bo-kaap",
+          "west": 18.4372938,
+          "south": -33.934823,
+          "east": 18.4589458,
+          "north": -33.916857,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "CBD/Company’s Garden",
+      "Bo-Kaap",
+      "V&A Waterfront",
+      "Camps Bay",
+      "Observatory/Woodstock"
+    ],
+    "landmarks": [
+      "Table Mountain cableway/stations",
+      "City Hall",
+      "Castle of Good Hope",
+      "stadium",
+      "Zeitz MOCAA exterior",
+      "colorful Bo-Kaap facades",
+      "Robben Island context",
+      "port cranes",
+      "ferries",
+      "beaches"
+    ],
+    "geography": [
+      "City Bowl",
+      "Atlantic Seaboard",
+      "Cape Flats shell",
+      "Table Mountain peninsula terrain",
+      "harbor",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "Atlantic Seaboard",
+      "harbor"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire City of Cape Town LiDAR-derived 3D/footprint layers and redistribution clearance first, then national elevation/orthophoto and Overture/OSM; cover City Bowl, Atlantic Seaboard, Cape Flats shell, Table Mountain peninsula terrain, harbor, and airport approach.",
+    "detailScope": "Detail CBD/Company’s Garden, Bo-Kaap, V&A Waterfront, Camps Bay, Observatory/Woodstock; include Table Mountain cableway/stations, City Hall, Castle of Good Hope, stadium, Zeitz MOCAA exterior, colorful Bo-Kaap facades, Robben Island context, port cranes, ferries, and beaches.",
+    "buildScope": "Build City Bowl–Bo-Kaap and V&A Waterfront hero zones, 10 pt/m²-class municipal LiDAR where approved, dramatic mountain/cliff terrain, ocean/harbor, cableway/ferry routes, fynbos, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +165,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

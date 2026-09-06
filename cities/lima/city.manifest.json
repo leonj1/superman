@@ -3,6 +3,7 @@
   "city": "lima",
   "phase": 195,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 195,
+    "phaseFile": "phases/PHASE_195.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/lima/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Lima/Peru official terrain, cliff/coast, orthophoto, building and archaeological data before Overture/OSM; cover historic center, Miraflores/Barranco, Callao/port shell, rail, and airport approach.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Plaza Mayor/historic center, Miraflores, Barranco, San Isidro; include cathedral/government public exteriors, San Francisco exterior, Torre Tagle exterior, Huaca Pucllana under heritage rights, cliffs/malecón, Bridge of Sighs, modern towers, Metropolitano/Metro, port, and airport.",
+    "phase-specific-topology-and-experience: Assert cliff/coast/port topology, archaeology exclusion, heritage facade set, transit/airport, and `city:verify --city lima`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

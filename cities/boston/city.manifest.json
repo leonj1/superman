@@ -26,8 +26,10 @@
   "memoryEvidence": null,
   "collisionEvidence": null,
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "Boston Planning 3D Smart Model redistribution rights and exact tile lineage are unconfirmed.",
+    "MassGIS building, LiDAR, imagery, roads, harbor, park, and transit payloads have not been acquired or checksum-pinned.",
+    "Required landmark models have not passed item-level provenance and redistribution review.",
+    "No terrain, imagery, geometry, collision, navigation, texture, or 3D Tiles package has been built.",
+    "CDN/signing credentials, physical-GPU evidence, and two-person license/visual approval are required."
   ]
 }

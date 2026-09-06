@@ -1,35 +1,228 @@
 {
   "schemaVersion": 1,
   "city": "baghdad",
+  "phase": 144,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      43.970767,
+      32.981256,
+      44.830993,
+      33.699904
+    ],
+    "coreBbox": [
+      44.293352,
+      33.250749,
+      44.508408,
+      33.430411
+    ],
+    "heroZones": [
+      {
+        "id": "mutanabbi-old-center-hero",
+        "name": "Mutanabbi/old center",
+        "bbox": [
+          44.385557,
+          33.336088,
+          44.401686,
+          33.345072
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build old center–Tigris and public cultural district hero zones, river/bridges, courtyard facades, palms, collision, heat/dust and night materials."
+      },
+      {
+        "id": "riverfront-hero",
+        "name": "riverfront",
+        "bbox": [
+          44.400074,
+          33.336088,
+          44.416203,
+          33.345072
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Mutanabbi/old center, riverfront, public monuments; include Mustansiriya exterior, Qushla, Save Iraqi Culture monument, Victory Arch public context if approved, mosque exteriors under cultural review, bridges, station, and river boats."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "baghdad-official-data-discovery"
+    ],
+    "buildings": [
+      "baghdad-landmark-model-discovery",
+      "baghdad-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "baghdad-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "baghdad-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "baghdad-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "baghdad-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "baghdad-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Mutanabbi/old center",
+      "riverfront",
+      "public monuments"
+    ],
+    "landmarks": [
+      "Mustansiriya exterior",
+      "Qushla",
+      "Save Iraqi Culture monument",
+      "Victory Arch public context if approved",
+      "mosque exteriors under cultural review",
+      "bridges",
+      "station",
+      "river boats"
+    ],
+    "geography": [
+      "public central districts",
+      "Tigris",
+      "rail",
+      "civilian airport corridor while excluding sensitive sites"
+    ],
+    "waterBodies": [],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "civilian airport corridor while excluding sensitive sites"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire lawful Iraqi/Baghdad terrain, imagery, building and heritage sources with security review before Overture/OSM; cover public central districts, Tigris, rail, and civilian airport corridor while excluding sensitive sites.",
+    "detail": "Detail Mutanabbi/old center, riverfront, public monuments; include Mustansiriya exterior, Qushla, Save Iraqi Culture monument, Victory Arch public context if approved, mosque exteriors under cultural review, bridges, station, and river boats.",
+    "build": "Build old center–Tigris and public cultural district hero zones, river/bridges, courtyard facades, palms, collision, heat/dust and night materials.",
+    "assertion": "Assert security exclusions, Tigris/bridge topology, heritage permissions/current-state metadata, and `city:verify --city baghdad`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-baghdad-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

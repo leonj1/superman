@@ -1,35 +1,237 @@
 {
   "schemaVersion": 1,
   "city": "melbourne",
+  "phase": 183,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      144.508482,
+      -38.173324,
+      145.418158,
+      -37.454676
+    ],
+    "coreBbox": [
+      144.84961,
+      -37.903831,
+      145.07703,
+      -37.724169
+    ],
+    "heroZones": [
+      {
+        "id": "cbd-lanes-hero",
+        "name": "CBD lanes",
+        "bbox": [
+          144.947116,
+          -37.818492,
+          144.964173,
+          -37.809508
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build laneways/Federation–Southbank and Carlton hero zones, Victorian/modern facades, Yarra/bridges, tram/rail network, collision, four-season/wet and night materials."
+      },
+      {
+        "id": "federation-square-hero",
+        "name": "Federation Square",
+        "bbox": [
+          144.962467,
+          -37.818492,
+          144.979524,
+          -37.809508
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail CBD lanes, Federation Square, Southbank, Docklands, Carlton; include Flinders Street, Shrine, Royal Exhibition exterior, Eureka/Australia 108, stadiums, Arts Centre spire, bridges, station, trams, port, and markets."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "melbourne-official-data-discovery"
+    ],
+    "buildings": [
+      "melbourne-landmark-model-discovery",
+      "melbourne-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "melbourne-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "melbourne-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "melbourne-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "melbourne-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "melbourne-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "CBD lanes",
+      "Federation Square",
+      "Southbank",
+      "Docklands",
+      "Carlton"
+    ],
+    "landmarks": [
+      "Flinders Street",
+      "Shrine",
+      "Royal Exhibition exterior",
+      "Eureka/Australia 108",
+      "stadiums",
+      "Arts Centre spire",
+      "bridges",
+      "station",
+      "trams",
+      "port",
+      "markets"
+    ],
+    "geography": [
+      "CBD",
+      "inner districts",
+      "Yarra/bay edge",
+      "port",
+      "rail/trams",
+      "airport corridor"
+    ],
+    "waterBodies": [
+      "Yarra/bay edge"
+    ],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "CBD",
+      "airport corridor"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Victoria/Melbourne official 3D/LiDAR, terrain, orthophoto and building data before Overture/OSM; cover CBD, inner districts, Yarra/bay edge, port, rail/trams, and airport corridor.",
+    "detail": "Detail CBD lanes, Federation Square, Southbank, Docklands, Carlton; include Flinders Street, Shrine, Royal Exhibition exterior, Eureka/Australia 108, stadiums, Arts Centre spire, bridges, station, trams, port, and markets.",
+    "build": "Build laneways/Federation–Southbank and Carlton hero zones, Victorian/modern facades, Yarra/bridges, tram/rail network, collision, four-season/wet and night materials.",
+    "assertion": "Assert grid/laneway and tram topology, river/bridge, skyline/stadium landmarks, and `city:verify --city melbourne`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-melbourne-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

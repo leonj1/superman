@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "naples",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,150 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-naples-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-naples"
+    ],
+    "imagery": [
+      "openaerialmap-naples"
+    ],
+    "roads": [
+      "overture-2026-08-19-naples-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-naples-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-naples-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 13.793064,
+        "south": 40.492836,
+        "east": 14.743156,
+        "north": 41.211484
+      },
+      "core": {
+        "west": 14.149349,
+        "south": 40.762329,
+        "east": 14.386871,
+        "north": 40.941991
+      },
+      "heroZones": [
+        {
+          "id": "centro-storico",
+          "west": 14.256234,
+          "south": 40.843177,
+          "east": 14.279986,
+          "north": 40.861143,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "waterfront",
+          "west": 14.283548799999998,
+          "south": 40.843177,
+          "east": 14.307300799999998,
+          "north": 40.861143,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Centro Storico",
+      "waterfront",
+      "Spanish Quarters",
+      "Vomero"
+    ],
+    "landmarks": [
+      "Castel dell’Ovo/Nuovo",
+      "Royal Palace exterior",
+      "Galleria Umberto",
+      "cathedral",
+      "San Francesco di Paola",
+      "funiculars",
+      "station",
+      "port/ferries",
+      "stadium context"
+    ],
+    "geography": [
+      "historic center",
+      "bay",
+      "port",
+      "Vomero",
+      "Vesuvius/Pompeii context at terrain LoD",
+      "rail",
+      "airport"
+    ],
+    "waterBodies": [
+      "bay"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Naples/Campania official LiDAR, terrain, bathymetry, orthophoto and building sources before Overture/OSM; cover historic center, bay, port, Vomero, Vesuvius/Pompeii context at terrain LoD, rail, and airport.",
+    "detailScope": "Detail Centro Storico, waterfront, Spanish Quarters, Vomero; include Castel dell’Ovo/Nuovo, Royal Palace exterior, Galleria Umberto, cathedral, San Francesco di Paola, funiculars, station, port/ferries, and stadium context.",
+    "buildScope": "Build Spaccanapoli and waterfront/castles hero zones, dense balconies/alleys, steep terrain, bay/port/ferry routes, collision, weathered and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +162,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

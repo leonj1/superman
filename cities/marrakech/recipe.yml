@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "marrakech",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,145 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-marrakech-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-marrakech"
+    ],
+    "imagery": [
+      "openaerialmap-marrakech"
+    ],
+    "roads": [
+      "overture-2026-08-19-marrakech-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-marrakech-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-marrakech-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -8.421972,
+        "south": 31.274836,
+        "east": -7.577908,
+        "north": 31.993484
+      },
+      "core": {
+        "west": -8.105448,
+        "south": 31.544329,
+        "east": -7.894432,
+        "north": 31.723991
+      },
+      "heroZones": [
+        {
+          "id": "jemaa-el-fnaa-souks",
+          "west": -8.010491,
+          "south": 31.625177,
+          "east": -7.989389,
+          "north": 31.643143,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "kasbah",
+          "west": -7.9862237,
+          "south": 31.625177,
+          "east": -7.9651217,
+          "north": 31.643143,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Jemaa el-Fnaa/souks",
+      "Kasbah",
+      "Mellah",
+      "Gueliz"
+    ],
+    "landmarks": [
+      "Koutoubia",
+      "city walls/gates",
+      "Bahia/El Badi exteriors",
+      "Saadian tomb exterior context",
+      "Majorelle structures",
+      "Menara pavilion",
+      "station",
+      "airport"
+    ],
+    "geography": [
+      "medina/walls",
+      "Gueliz",
+      "gardens",
+      "airport",
+      "palm groves",
+      "Atlas horizon"
+    ],
+    "waterBodies": [],
+    "bridges": [],
+    "airports": [
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Moroccan/Marrakech terrain, orthophoto, building and heritage data before Overture/OSM; cover medina/walls, Gueliz, gardens, airport, palm groves, and Atlas horizon.",
+    "detailScope": "Detail Jemaa el-Fnaa/souks, Kasbah, Mellah, Gueliz; include Koutoubia, city walls/gates, Bahia/El Badi exteriors, Saadian tomb exterior context, Majorelle structures, Menara pavilion, station, and airport.",
+    "buildScope": "Build medina/souks–square and Koutoubia–Kasbah hero zones, courtyard/roof/street maze, earthen materials, walls/palms, collision, heat/dust and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +157,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

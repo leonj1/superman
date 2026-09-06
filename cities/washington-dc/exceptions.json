@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "city": "washington-dc",
+  "generatedAt": "2026-09-05",
+  "exceptions": [
+    {"id": "dc-buildings-not-acquired", "severity": "release-blocking", "system": "buildings", "detail": "No authoritative current DC building/3D payload and item-level rights record is pinned."},
+    {"id": "terrain-not-acquired", "severity": "release-blocking", "system": "terrain", "detail": "No exact USGS 3DEP metro tile manifest, payload, metadata, geoid transform, or checksum set exists."},
+    {"id": "imagery-not-acquired", "severity": "release-blocking", "system": "imagery", "detail": "No cross-jurisdiction NAIP scene manifest or checksum set exists, and NAIP alone is below hero-facade density."},
+    {"id": "base-layers-not-acquired", "severity": "release-blocking", "system": "geometry", "detail": "Road, water, vegetation, and transit candidates are not acquired or normalized."},
+    {"id": "landmarks-unlicensed", "severity": "release-blocking", "system": "landmarks", "detail": "Required public exterior landmark models have not passed item-level provenance and protected-area review."},
+    {"id": "protected-area-review-missing", "severity": "release-blocking", "system": "safety", "detail": "No approved checklist proves exclusion of interiors, security-sensitive detail, restricted sources, and nonpublic assets."},
+    {"id": "no-derived-artifacts", "severity": "release-blocking", "system": "packaging", "detail": "No 3D Tiles, collision, navigation, texture, SBOM, signature, or evidence artifacts exist."},
+    {"id": "no-release-environment", "severity": "release-blocking", "system": "certification", "detail": "CDN/signing credentials, two-person approvals, and named physical-GPU hardware are unavailable."}
+  ]
+}

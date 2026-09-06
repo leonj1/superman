@@ -3,6 +3,7 @@
   "city": "new-york-city",
   "phase": 1,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,19 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "preflightEvidence": {
+    "sourceDiscovery": "sources.json",
+    "buildContract": "recipe.yml",
+    "knownExceptions": "exceptions.json",
+    "verifiedAt": null
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "Human legal approval is required for redistribution and modification of the official NYC 3-D Building Model.",
+    "The official model's source CRS and vertical datum must be resolved from its payload or publisher before conversion.",
+    "Checksum-pinned city model, current footprints, 3DEP, orthoimagery, planimetrics, Overture deltas, and transit snapshots have not been acquired.",
+    "GDAL, PDAL, CityGML conversion, meshopt, gltfpack, and KTX2 build tooling is not provisioned in this workspace.",
+    "Terrain, imagery, landmark, facade, collision, navigation, ferry, and transit runtime artifacts have not been built.",
+    "Content signing and immutable CDN publication infrastructure is unavailable.",
+    "Physical-GPU performance evidence and independent human legal and visual approvals are required."
   ]
 }

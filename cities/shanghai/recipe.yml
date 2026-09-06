@@ -1,35 +1,231 @@
 {
   "schemaVersion": 1,
   "city": "shanghai",
+  "phase": 152,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      121.037878,
+      30.862896,
+      121.878242,
+      31.581544
+    ],
+    "coreBbox": [
+      121.353014,
+      31.132389,
+      121.563106,
+      31.312051
+    ],
+    "heroZones": [
+      {
+        "id": "bund-hero",
+        "name": "Bund",
+        "bbox": [
+          121.443091,
+          31.217728,
+          121.458848,
+          31.226712
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Bund–Lujiazui cross-river and French Concession hero zones, supertall LODs, historic facades, river/ferries/bridges, Metro, collision, haze/rain and night materials."
+      },
+      {
+        "id": "lujiazui-hero",
+        "name": "Lujiazui",
+        "bbox": [
+          121.457272,
+          31.217728,
+          121.473029,
+          31.226712
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Bund, Lujiazui, French Concession sample, People’s Square, Xintiandi; include Shanghai/World Financial/Jin Mao towers, Oriental Pearl, Bund facades, Shanghai Museum exterior, station, bridges, ferries, and airport shells."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "shanghai-official-data-discovery"
+    ],
+    "buildings": [
+      "shanghai-landmark-model-discovery",
+      "shanghai-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "shanghai-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "shanghai-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "shanghai-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "shanghai-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "shanghai-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Bund",
+      "Lujiazui",
+      "French Concession sample",
+      "People’s Square",
+      "Xintiandi"
+    ],
+    "landmarks": [
+      "Shanghai/World Financial/Jin Mao towers",
+      "Oriental Pearl",
+      "Bund facades",
+      "Shanghai Museum exterior",
+      "station",
+      "bridges",
+      "ferries",
+      "airport shells"
+    ],
+    "geography": [
+      "Puxi/Pudong",
+      "Huangpu/Suzhou Creek",
+      "rail",
+      "port shell",
+      "airport corridors"
+    ],
+    "waterBodies": [],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "airport corridors"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire lawfully exportable Shanghai/Chinese terrain, imagery, 3D/building and river/port sources with security review before Overture/OSM; cover Puxi/Pudong, Huangpu/Suzhou Creek, rail, port shell, and airport corridors.",
+    "detail": "Detail Bund, Lujiazui, French Concession sample, People’s Square, Xintiandi; include Shanghai/World Financial/Jin Mao towers, Oriental Pearl, Bund facades, Shanghai Museum exterior, station, bridges, ferries, and airport shells.",
+    "build": "Build Bund–Lujiazui cross-river and French Concession hero zones, supertall LODs, historic facades, river/ferries/bridges, Metro, collision, haze/rain and night materials.",
+    "assertion": "Assert coordinate/source compliance, tower height/silhouettes, Bund facade continuity, river/transit, and `city:verify --city shanghai`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-shanghai-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

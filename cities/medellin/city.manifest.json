@@ -3,6 +3,7 @@
   "city": "medellin",
   "phase": 197,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 197,
+    "phaseFile": "phases/PHASE_197.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/medellin/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Medellín/Colombia official 3D/LiDAR, high-resolution terrain, orthophoto, building and river data before Overture/OSM; cover valley, central/el Poblado, hillside districts at respectful LoD, Metro/cableways, and airport corridors.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Centro/Plaza Botero, El Poblado, river innovation district, selected hillside cable-car corridors; include Coltejer, cathedral, museum exteriors, Pueblito Paisa, Orquideorama exterior, stadium, Metro stations/viaducts, Metrocable, bridges, and airport shell.",
+    "phase-specific-topology-and-experience: Assert valley/slope/building grounding, Metro/Metrocable continuity, respectful community review, and `city:verify --city medellin`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

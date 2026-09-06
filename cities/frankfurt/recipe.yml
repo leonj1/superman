@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "frankfurt",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,152 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-frankfurt-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-frankfurt"
+    ],
+    "imagery": [
+      "openaerialmap-frankfurt"
+    ],
+    "roads": [
+      "overture-2026-08-19-frankfurt-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-frankfurt-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-frankfurt-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 8.123813,
+        "south": 49.756196,
+        "east": 9.244527,
+        "north": 50.474844
+      },
+      "core": {
+        "west": 8.544081,
+        "south": 50.025689,
+        "east": 8.824259,
+        "north": 50.205351
+      },
+      "heroZones": [
+        {
+          "id": "romer-old-town",
+          "west": 8.670161,
+          "south": 50.106537,
+          "east": 8.698179,
+          "north": 50.124503,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "bankenviertel",
+          "west": 8.7023817,
+          "south": 50.106537,
+          "east": 8.7303997,
+          "north": 50.124503,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Römer/old town",
+      "Bankenviertel",
+      "Museumsufer",
+      "station quarter"
+    ],
+    "landmarks": [
+      "cathedral",
+      "Römer",
+      "Main Tower",
+      "Commerzbank Tower",
+      "ECB",
+      "Messeturm",
+      "opera",
+      "bridges",
+      "Hauptbahnhof",
+      "trams",
+      "FRA terminal/approaches"
+    ],
+    "geography": [
+      "Innenstadt",
+      "banking district",
+      "Main river",
+      "airport",
+      "rail",
+      "nearby urban shell"
+    ],
+    "waterBodies": [
+      "Main river"
+    ],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Hesse/Frankfurt official LoD2, LiDAR, terrain and orthophotos before Overture/OSM; cover Innenstadt, banking district, Main river, airport, rail, and nearby urban shell.",
+    "detailScope": "Detail Römer/old town, Bankenviertel, Museumsufer, station quarter; include cathedral, Römer, Main Tower, Commerzbank Tower, ECB, Messeturm, opera, bridges, Hauptbahnhof, trams, and FRA terminal/approaches.",
+    "buildScope": "Build Römer–river and banking district hero zones, old/new facade contrast, Main/bridges, rail/trams, airport shell, collision, and night skyline."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +164,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "dubrovnik",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,147 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-dubrovnik-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-dubrovnik"
+    ],
+    "imagery": [
+      "openaerialmap-dubrovnik"
+    ],
+    "roads": [
+      "overture-2026-08-19-dubrovnik-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-dubrovnik-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-dubrovnik-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 17.620618,
+        "south": 42.281926,
+        "east": 18.597562,
+        "north": 43.000574
+      },
+      "core": {
+        "west": 17.986972,
+        "south": 42.551419,
+        "east": 18.231208,
+        "north": 42.731081
+      },
+      "heroZones": [
+        {
+          "id": "complete-old-town-walls",
+          "west": 18.096878,
+          "south": 42.632267,
+          "east": 18.121302,
+          "north": 42.650233,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "pile-ploce",
+          "west": 18.1249656,
+          "south": 42.632267,
+          "east": 18.1493896,
+          "north": 42.650233,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "complete Old Town/walls",
+      "Pile/Ploče",
+      "Lovrijenac",
+      "harbor"
+    ],
+    "landmarks": [
+      "city walls/towers/gates",
+      "Rector’s Palace exterior",
+      "cathedral",
+      "Sponza",
+      "Stradun",
+      "fortresses",
+      "cable car",
+      "island ferries",
+      "port"
+    ],
+    "geography": [
+      "walled city",
+      "Lapad/Gruž",
+      "nearby islands/coast",
+      "port",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "nearby islands/coast"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Croatian/Dubrovnik official LiDAR, terrain, orthophoto, bathymetry and heritage model data before Overture/OSM; cover walled city, Lapad/Gruž, nearby islands/coast, port, and airport approach.",
+    "detailScope": "Detail complete Old Town/walls, Pile/Ploče, Lovrijenac, harbor; include city walls/towers/gates, Rector’s Palace exterior, cathedral, Sponza, Stradun, fortresses, cable car, island ferries, and port.",
+    "buildScope": "Build entire walled city and Fort Lovrijenac/harbor hero zones, individual limestone roofs/facades, walls/walkways, sea/cliffs/boats, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +159,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

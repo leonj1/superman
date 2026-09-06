@@ -1,35 +1,236 @@
 {
   "schemaVersion": 1,
   "city": "buenos-aires",
+  "phase": 191,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      -58.81383,
+      -34.972474,
+      -57.94063,
+      -34.253826
+    ],
+    "coreBbox": [
+      -58.48638,
+      -34.702981,
+      -58.26808,
+      -34.523319
+    ],
+    "heroZones": [
+      {
+        "id": "microcentro-plaza-de-mayo-hero",
+        "name": "Microcentro/Plaza de Mayo",
+        "bbox": [
+          -58.392784,
+          -34.617642,
+          -58.376411,
+          -34.608658
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Plaza–Obelisk/San Telmo and La Boca/Puerto Madero hero zones, European/colorful facade sets, estuary/port, rail/Subte, collision, rain and night materials."
+      },
+      {
+        "id": "san-telmo-hero",
+        "name": "San Telmo",
+        "bbox": [
+          -58.378049,
+          -34.617642,
+          -58.361676,
+          -34.608658
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Microcentro/Plaza de Mayo, San Telmo, Recoleta, Palermo, La Boca, Puerto Madero; include Obelisk, Casa Rosada exterior, Congress, Teatro Colón exterior, Kavanagh, Floralis, Bombonera/Monumental exteriors, bridge, stations, Subte, port, and waterfront."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "buenos-aires-official-data-discovery"
+    ],
+    "buildings": [
+      "buenos-aires-landmark-model-discovery",
+      "buenos-aires-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "buenos-aires-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "buenos-aires-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "buenos-aires-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "buenos-aires-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "buenos-aires-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Microcentro/Plaza de Mayo",
+      "San Telmo",
+      "Recoleta",
+      "Palermo",
+      "La Boca",
+      "Puerto Madero"
+    ],
+    "landmarks": [
+      "Obelisk",
+      "Casa Rosada exterior",
+      "Congress",
+      "Teatro Colón exterior",
+      "Kavanagh",
+      "Floralis",
+      "Bombonera/Monumental exteriors",
+      "bridge",
+      "stations",
+      "Subte",
+      "port",
+      "waterfront"
+    ],
+    "geography": [
+      "central communes",
+      "Puerto Madero",
+      "La Boca",
+      "rail",
+      "port",
+      "airport approaches"
+    ],
+    "waterBodies": [],
+    "bridges": [
+      "bridge"
+    ],
+    "airports": [
+      "airport approaches"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Buenos Aires/Argentina official 3D/LiDAR, terrain, orthophoto, building and Río de la Plata data before Overture/OSM; cover central communes, Puerto Madero, La Boca, rail, port, and airport approaches.",
+    "detail": "Detail Microcentro/Plaza de Mayo, San Telmo, Recoleta, Palermo, La Boca, Puerto Madero; include Obelisk, Casa Rosada exterior, Congress, Teatro Colón exterior, Kavanagh, Floralis, Bombonera/Monumental exteriors, bridge, stations, Subte, port, and waterfront.",
+    "build": "Build Plaza–Obelisk/San Telmo and La Boca/Puerto Madero hero zones, European/colorful facade sets, estuary/port, rail/Subte, collision, rain and night materials.",
+    "assertion": "Assert avenue/monument scale, district facade identity, port/estuary/rail and stadium set, and `city:verify --city buenos-aires`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-buenos-aires-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

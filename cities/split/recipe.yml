@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "split",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,150 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-split-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-split"
+    ],
+    "imagery": [
+      "openaerialmap-split"
+    ],
+    "roads": [
+      "overture-2026-08-19-split-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-split-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-split-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 15.943713,
+        "south": 43.149586,
+        "east": 16.934587,
+        "north": 43.868234
+      },
+      "core": {
+        "west": 16.315291,
+        "south": 43.419079,
+        "east": 16.563009,
+        "north": 43.598741
+      },
+      "heroZones": [
+        {
+          "id": "diocletian-s-palace",
+          "west": 16.426764,
+          "south": 43.499927,
+          "east": 16.451536,
+          "north": 43.517893,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "riva",
+          "west": 16.455251800000003,
+          "south": 43.499927,
+          "east": 16.480023800000005,
+          "north": 43.517893,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Diocletian’s Palace",
+      "Riva",
+      "Varoš",
+      "Marjan"
+    ],
+    "landmarks": [
+      "palace walls/cellars exterior topology",
+      "cathedral/campanile",
+      "gates",
+      "Gregory statue",
+      "stadium",
+      "ferries",
+      "port",
+      "station",
+      "waterfront"
+    ],
+    "geography": [
+      "old center",
+      "Marjan",
+      "harbor",
+      "coast/islands context",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [
+      "harbor",
+      "coast/islands context"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Croatian/Split official LiDAR, terrain, orthophoto and heritage/building data before Overture/OSM; cover old center, Marjan, harbor, coast/islands context, rail, and airport approach.",
+    "detailScope": "Detail Diocletian’s Palace, Riva, Varoš, Marjan; include palace walls/cellars exterior topology, cathedral/campanile, gates, Gregory statue, stadium, ferries, port, station, and waterfront.",
+    "buildScope": "Build palace/Old Town and Riva–Marjan hero zones, Roman/medieval fabric, steep alleys, sea/port/ferries, vegetation, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +162,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

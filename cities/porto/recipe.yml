@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "porto",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,152 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-porto-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-porto"
+    ],
+    "imagery": [
+      "openaerialmap-porto"
+    ],
+    "roads": [
+      "overture-2026-08-19-porto-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-porto-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-porto-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -9.088156,
+        "south": 40.789176,
+        "east": -8.133784,
+        "north": 41.507824
+      },
+      "core": {
+        "west": -8.730267,
+        "south": 41.058669,
+        "east": -8.491673,
+        "north": 41.238331
+      },
+      "heroZones": [
+        {
+          "id": "ribeira",
+          "west": -8.6229,
+          "south": 41.139517,
+          "east": -8.59904,
+          "north": 41.157483,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "se",
+          "west": -8.595461,
+          "south": 41.139517,
+          "east": -8.571601000000001,
+          "north": 41.157483,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Ribeira",
+      "Sé",
+      "Clérigos",
+      "Aliados",
+      "Gaia"
+    ],
+    "landmarks": [
+      "Dom Luís I",
+      "Arrábida bridges",
+      "cathedral",
+      "Clérigos",
+      "São Bento",
+      "Palácio da Bolsa exterior",
+      "Casa da Música",
+      "wine lodges",
+      "funicular",
+      "trams",
+      "boats"
+    ],
+    "geography": [
+      "Ribeira",
+      "Vila Nova de Gaia",
+      "Douro",
+      "Atlantic mouth",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [],
+    "bridges": [
+      "Arrábida bridges"
+    ],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "water",
+      "air"
+    ],
+    "acquireScope": "Acquire Porto/Portuguese LiDAR, steep terrain, orthophoto and 3D/building data before Overture/OSM; cover Ribeira, Vila Nova de Gaia, Douro, Atlantic mouth, rail, and airport approach.",
+    "detailScope": "Detail Ribeira, Sé, Clérigos, Aliados, Gaia; include Dom Luís I and Arrábida bridges, cathedral, Clérigos, São Bento, Palácio da Bolsa exterior, Casa da Música, wine lodges, funicular, trams, and boats.",
+    "buildScope": "Build Ribeira–bridge/Gaia and Clérigos–Aliados hero zones, steep tiled facades/roofs, Douro/bridges/boats, rail/trams, collision, wet and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +164,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

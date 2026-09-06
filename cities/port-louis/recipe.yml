@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "port-louis",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,146 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-port-louis-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-port-louis"
+    ],
+    "imagery": [
+      "openaerialmap-port-louis"
+    ],
+    "roads": [
+      "overture-2026-08-19-port-louis-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-port-louis-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-port-louis-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 57.11611,
+        "south": -20.521264,
+        "east": 57.88167,
+        "north": -19.802616
+      },
+      "core": {
+        "west": 57.403195,
+        "south": -20.251771,
+        "east": 57.594585,
+        "north": -20.072109
+      },
+      "heroZones": [
+        {
+          "id": "central-market",
+          "west": 57.48932,
+          "south": -20.170923,
+          "east": 57.50846,
+          "north": -20.152957,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "waterfront-caudan",
+          "west": 57.511331,
+          "south": -20.170923,
+          "east": 57.530471,
+          "north": -20.152957,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "central market",
+      "waterfront/Caudan",
+      "government/citadel public exteriors"
+    ],
+    "landmarks": [
+      "Jummah Mosque exterior",
+      "St Louis cathedral",
+      "Fort Adelaide",
+      "Aapravasi Ghat exterior context",
+      "bank towers",
+      "racecourse",
+      "port cranes/ships",
+      "mountains"
+    ],
+    "geography": [
+      "harbor",
+      "central city",
+      "Moka mountains",
+      "Caudan",
+      "port",
+      "rail/transit",
+      "airport-facing corridor shell"
+    ],
+    "waterBodies": [
+      "harbor"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport-facing corridor shell"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ],
+    "acquireScope": "Acquire Mauritius/Port Louis terrain, coast, bathymetry, imagery and building data before Overture/OSM; cover harbor, central city, Moka mountains, Caudan, port, rail/transit, and airport-facing corridor shell.",
+    "detailScope": "Detail central market, waterfront/Caudan, government/citadel public exteriors; include Jummah Mosque exterior, St Louis cathedral, Fort Adelaide, Aapravasi Ghat exterior context, bank towers, racecourse, port cranes/ships, and mountains.",
+    "buildScope": "Build market–waterfront and citadel hero zones, steep mountain/harbor terrain, multicultural facades, boats, vegetation, collision, humid and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +158,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

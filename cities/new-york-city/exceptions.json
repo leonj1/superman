@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "city": "new-york-city",
+  "exceptions": [
+    {
+      "id": "official-model-rights",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": ["nyc-oti-3d-citygml-2014"],
+      "description": "Published metadata says the model is a public dataset for informational use and provides warranty disclaimers, but does not explicitly grant modification and redistribution of converted runtime geometry.",
+      "resolution": "Obtain written approval from NYC OTI/DCP or counsel confirmation tied to the exact download and retain the decision as release evidence."
+    },
+    {
+      "id": "official-model-datum",
+      "severity": "build-blocking",
+      "status": "open",
+      "sourceIds": ["nyc-oti-3d-citygml-2014"],
+      "description": "The published model metadata does not state the payload CRS or vertical datum.",
+      "resolution": "Inspect CityGML envelopes and publisher metadata after approved acquisition; reject the source if EPSG and vertical datum cannot be resolved."
+    },
+    {
+      "id": "official-model-age",
+      "severity": "conflation-required",
+      "status": "open",
+      "sourceIds": [
+        "nyc-oti-3d-citygml-2014",
+        "nyc-oti-building-footprints-5zhs-2jue"
+      ],
+      "description": "The 3-D model represents the 2014 aerial survey and cannot establish current building existence by itself.",
+      "resolution": "Conflate by stable NYC identifiers and geometry; current OTI footprints control existence and footprint, while the 2014 model contributes roof form only when the match passes tolerance."
+    },
+    {
+      "id": "newark-outside-city-coverage",
+      "severity": "source-gap",
+      "status": "open",
+      "sourceIds": [
+        "nyc-oti-3d-citygml-2014",
+        "overture-2026-08-19-nyc-deltas"
+      ],
+      "description": "The declared metro extent includes the Newark airport approach, which is outside NYC municipal source coverage.",
+      "resolution": "Use Overture and USGS sources for the approach shell; do not represent Newark as NYC-authoritative detail."
+    },
+    {
+      "id": "landmark-models-unacquired",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No separately licensed models have been acquired for the Statue of Liberty, Empire State Building, Chrysler Building, One WTC, or named bridges.",
+      "resolution": "Use LoD2 official-model geometry only if rights are approved; otherwise acquire an exact licensed model or publish an explicitly labeled procedural proxy."
+    },
+    {
+      "id": "transit-feed-rights",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": ["mta-static-gtfs", "nyc-dot-staten-island-ferry-gtfs"],
+      "description": "Static GTFS redistribution in a derived immutable city package has not received human legal approval.",
+      "resolution": "Approve exact terms and snapshot, or derive a visibly labeled, non-schedule route graph from an already approved geospatial source."
+    },
+    {
+      "id": "physical-performance-certification",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No 2560x1440 High-profile measurements exist from a named physical release GPU.",
+      "resolution": "Run the protected traversal suite on named hardware after final content is immutable; software rendering cannot satisfy this exception."
+    }
+  ]
+}

@@ -1,35 +1,239 @@
 {
   "schemaVersion": 1,
   "city": "singapore",
+  "phase": 156,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      103.490654,
+      0.930346,
+      104.209486,
+      1.648994
+    ],
+    "coreBbox": [
+      103.760216,
+      1.199839,
+      103.939924,
+      1.379501
+    ],
+    "heroZones": [
+      {
+        "id": "civic-district-marina-bay-hero",
+        "name": "Civic District/Marina Bay",
+        "bbox": [
+          103.837266,
+          1.285178,
+          103.850744,
+          1.294162
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Marina/Civic and Chinatown–Kampong Glam hero zones, tropical high-density facade/vegetation system, bay/reservoirs, MRT/roads, collision, rain and night materials."
+      },
+      {
+        "id": "chinatown-hero",
+        "name": "Chinatown",
+        "bbox": [
+          103.849396,
+          1.285178,
+          103.862874,
+          1.294162
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Civic District/Marina Bay, Chinatown, Kampong Glam, Orchard, Gardens, Sentosa; include Marina Bay Sands exterior where licensed, Merlion, Supertrees, ArtScience exterior, Esplanade, Fullerton, Raffles exterior, shophouses, Jewel exterior where licensed, port, MRT, cable car, and airport."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "singapore-official-data-discovery"
+    ],
+    "buildings": [
+      "singapore-landmark-model-discovery",
+      "singapore-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "singapore-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "singapore-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "singapore-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "singapore-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "singapore-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Civic District/Marina Bay",
+      "Chinatown",
+      "Kampong Glam",
+      "Orchard",
+      "Gardens",
+      "Sentosa"
+    ],
+    "landmarks": [
+      "Marina Bay Sands exterior where licensed",
+      "Merlion",
+      "Supertrees",
+      "ArtScience exterior",
+      "Esplanade",
+      "Fullerton",
+      "Raffles exterior",
+      "shophouses",
+      "Jewel exterior where licensed",
+      "port",
+      "MRT",
+      "cable car",
+      "airport"
+    ],
+    "geography": [
+      "the whole island at shell LoD",
+      "central region at LoD2",
+      "southern islands",
+      "port",
+      "reservoirs",
+      "MRT",
+      "airport"
+    ],
+    "waterBodies": [
+      "the whole island at shell LoD",
+      "southern islands"
+    ],
+    "bridges": [],
+    "airports": [
+      "MRT",
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Singapore SLA/URA/OneMap/open 3D, terrain, imagery and building data only where redistribution is explicit, then Overture/OSM; cover the whole island at shell LoD, central region at LoD2, southern islands, port, reservoirs, MRT, and airport.",
+    "detail": "Detail Civic District/Marina Bay, Chinatown, Kampong Glam, Orchard, Gardens, Sentosa; include Marina Bay Sands exterior where licensed, Merlion, Supertrees, ArtScience exterior, Esplanade, Fullerton, Raffles exterior, shophouses, Jewel exterior where licensed, port, MRT, cable car, and airport.",
+    "build": "Build Marina/Civic and Chinatown–Kampong Glam hero zones, tropical high-density facade/vegetation system, bay/reservoirs, MRT/roads, collision, rain and night materials.",
+    "assertion": "Assert whole-island coverage, bay/reclamation, vegetation/thermal budgets, landmark licenses, MRT/airport, and `city:verify --city singapore`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-singapore-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

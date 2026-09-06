@@ -3,6 +3,7 @@
   "city": "beijing",
   "phase": 151,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 151,
+    "phaseFile": "phases/PHASE_151.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/beijing/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire only lawfully exportable Chinese/Beijing official terrain, imagery and 3D/building sources with coordinate-system and data-security review before Overture/OSM; cover central rings, public heritage areas, rail, airport corridors, and mountain context without sensitive detail.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail central axis/public exteriors, hutong sample areas, CBD, Olympic Park; include Forbidden City/Tiananmen public exteriors under approved sources, Temple of Heaven, Drum/Bell towers, CCTV HQ, China Zun, Olympic stadium/aquatics exteriors, rail stations, and airport shells.",
+    "phase-specific-topology-and-experience: Assert export/security/license review, coordinate transform control points, central axis/CBD/Olympic silhouettes, and `city:verify --city beijing`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

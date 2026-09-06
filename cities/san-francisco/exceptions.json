@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "city": "san-francisco",
+  "exceptions": [
+    {
+      "id": "source-artifacts-unacquired",
+      "severity": "build-blocking",
+      "status": "open",
+      "sourceIds": ["datasf-building-footprints-ynuv-fyni", "noaa-sfei-sf-bay-lidar-2025-14673", "noaa-sfei-sf-bay-dem-2025-14675", "noaa-ngs-sf-imagery-2025-10318"],
+      "description": "The selected primary sources are documented but exact intersecting bytes and metadata snapshots are not locally acquired or hash-pinned.",
+      "resolution": "Generate deterministic inventories, download exact artifacts resumably, verify embedded CRS/datum, and record SHA-256, byte length, and acquisition time."
+    },
+    {
+      "id": "building-currentness",
+      "severity": "conflation-required",
+      "status": "open",
+      "sourceIds": ["datasf-building-footprints-ynuv-fyni", "noaa-sfei-sf-bay-lidar-2025-14673"],
+      "description": "Municipal footprint height attributes derive from 2010 data, while the 2025 LiDAR building class has weaker QA/QC than its ground class.",
+      "resolution": "Conflate footprint timestamps, 2025 surface returns, permits, and imagery; flag rather than invent unresolved roof forms."
+    },
+    {
+      "id": "metro-source-gap-and-odbl",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": ["overture-sf-metro-release"],
+      "description": "Oakland edge and SFO approaches exceed municipal coverage, and no exact Overture release or ODbL publication design is approved.",
+      "resolution": "Select and hash a bounded release, retain feature-level lineage, and obtain approval for derivative-database distribution and notices."
+    },
+    {
+      "id": "hero-facade-imagery",
+      "severity": "content-blocking",
+      "status": "open",
+      "sourceIds": ["noaa-ngs-sf-imagery-2025-10318", "usda-naip-california-sf-metro"],
+      "description": "Orthophotos provide roofs and ground appearance, not lawful street-facing textures at the required density.",
+      "resolution": "Acquire separately licensed facade references or use deterministic procedural materials; do not project consumer street imagery."
+    },
+    {
+      "id": "bridge-and-landmark-models",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": ["sf-landmark-models"],
+      "description": "No approved game-ready models exist for the required bridges, towers, civic landmarks, Alcatraz, cable cars, and piers.",
+      "resolution": "Acquire exact licensed models or build explicitly labeled proxies that pass position, height, silhouette, span, and clearance checks."
+    },
+    {
+      "id": "ferry-routes-and-rights",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": ["511-sf-bay-regional-gtfs"],
+      "description": "Regional ferry-route data requires an API token and unresolved agreement review.",
+      "resolution": "Approve and pin a dated GTFS snapshot, or derive visibly labeled non-schedule route corridors from an approved geographic source."
+    },
+    {
+      "id": "package-and-hosting",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No terrain, imagery, geometry, collision, navigation, 3D Tiles, CDN, signing, or rollback artifacts exist.",
+      "resolution": "Run the pinned pipeline after inputs clear preflight, then stage content-addressed artifacts and verify public HTTP behavior before catalog activation."
+    },
+    {
+      "id": "physical-performance-and-approvals",
+      "severity": "release-blocking",
+      "status": "open",
+      "sourceIds": [],
+      "description": "No named physical-GPU frame evidence or required human license and visual approvals exist.",
+      "resolution": "After the release candidate is immutable, run all traversal and soak suites on named hardware and attach signed raw evidence plus two-person approvals."
+    }
+  ]
+}

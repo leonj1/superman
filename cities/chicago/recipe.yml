@@ -1,35 +1,112 @@
 {
   "schemaVersion": 1,
   "city": "chicago",
+  "creationMode": "hybrid",
+  "creationRationale": "No approved, current, redistributable 3D Chicago model covers the declared metro area. Generate baseline geometry deterministically from acquired footprints, then replace landmarks only with approved authored models.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
+    "building-footprints",
+    "terrain-hires",
     "imagery",
     "roads",
     "water",
-    "vegetation"
+    "vegetation",
+    "landmark-models"
   ],
+  "coordinates": {
+    "sourceHorizontal": "EPSG:4326 and product-specific projected CRSs",
+    "sourceVertical": "NAVD88 where declared by USGS product metadata",
+    "workingHorizontal": "EPSG:26916",
+    "workingVertical": "NAVD88 metres",
+    "runtime": "EPSG:4978",
+    "verticalTransform": "NOAA VDatum/GEOID18 grid selected and checksum-pinned during terrain acquisition",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [-88.132434, 41.490706, -87.167666, 42.209354],
+    "coreBbox": [-87.770646, 41.760199, -87.529454, 41.939861],
+    "heroZones": [
+      {
+        "id": "loop-riverwalk",
+        "bbox": [-87.6469, 41.8742, -87.6202, 41.8947],
+        "minimumAreaSquareKilometers": 2.0,
+        "includes": ["Chicago Riverwalk", "movable bridges", "Willis Tower", "Wrigley Building", "Tribune Tower"]
+      },
+      {
+        "id": "millennium-park-lakefront",
+        "bbox": [-87.6307, 41.8754, -87.6081, 41.8938],
+        "minimumAreaSquareKilometers": 1.5,
+        "includes": ["Millennium Park", "Cloud Gate", "Art Institute of Chicago", "lakefront harbors"]
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [0, 1],
+      "core": [0, 1, 2],
+      "hero": [0, 1, 2, 3]
+    }
+  },
+  "sourcePriority": {
+    "terrain": ["usgs-3dep-chicago-1m"],
+    "buildings": ["approved-landmark-model", "overture-buildings-2026-08-19.0", "procedural-proxy"],
+    "roads": ["overture-segments-2026-08-19.0"],
+    "water": ["noaa-chicago-shoreline", "overture-water-2026-08-19.0"],
+    "vegetation": ["chicago-parks-ej32-qgdr-2026-09-05", "procedural-biome"]
+  },
+  "requiredDistricts": ["Loop", "River North", "Magnificent Mile", "Streeterville", "Hyde Park", "Wrigleyville"],
+  "requiredSystems": ["Lake Michigan shoreline", "Chicago River", "movable bridges", "L tracks", "Metra stations", "lakefront harbors", "Midway approaches", "O’Hare approaches"],
+  "requiredLandmarks": ["Willis Tower", "875 N Michigan", "Tribune Tower", "Wrigley Building", "Cloud Gate", "Navy Pier", "Field Museum", "Museum of Science and Industry"],
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-silhouette-validated",
+    "imagery": false,
+    "terrain": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "transform-to-epsg-26916",
+    "transform-navd88-to-epsg-4978-ellipsoidal-height",
+    "assign-stable-source-prefixed-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-shoreline-road-and-building-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-simplified-collision-and-navigation",
+    "validate-river-bridge-and-elevated-rail-clearance",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
+    "run-chicago-deterministic-traversal-suite",
     "validate-and-sign-manifest"
   ],
+  "validation": {
+    "minimumCoreCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "minimumHighResolutionScale": 0.95,
+    "requiredNamedRoutes": ["riverwalk-west-to-east", "loop-l-track-circuit", "lakefront-north-south", "midway-approach", "ohare-approach"]
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "kyiv",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,140 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-kyiv-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-kyiv"
+    ],
+    "imagery": [
+      "openaerialmap-kyiv"
+    ],
+    "roads": [
+      "overture-2026-08-19-kyiv-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-kyiv-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-kyiv-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 29.959435,
+        "south": 50.095336,
+        "east": 31.088165,
+        "north": 50.813984
+      },
+      "core": {
+        "west": 30.382709,
+        "south": 50.364829,
+        "east": 30.664891,
+        "north": 50.544491
+      },
+      "heroZones": [
+        {
+          "id": "pechersk",
+          "west": 30.509691,
+          "south": 50.445677,
+          "east": 30.537909,
+          "north": 50.463643,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "podil",
+          "west": 30.5421417,
+          "south": 50.445677,
+          "east": 30.570359699999997,
+          "north": 50.463643,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Pechersk",
+      "Podil",
+      "Maidan/Khreshchatyk",
+      "Sophia district"
+    ],
+    "landmarks": [
+      "St Sophia",
+      "St Michael’s",
+      "Golden Gate",
+      "Mother Ukraine monument",
+      "Mariinsky exterior",
+      "Kyiv-Pechersk Lavra exterior where permitted",
+      "funicular",
+      "Metro bridges",
+      "river islands",
+      "station"
+    ],
+    "geography": [],
+    "waterBodies": [],
+    "bridges": [
+      "Metro bridges"
+    ],
+    "airports": [],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire only lawful, security-reviewed Ukrainian/Kyiv pre-conflict/current open sources and Overture/OSM; exclude sensitive real-time/infrastructure details, record capture date, and cover central districts, Dnipro, hills/islands, rail, and civilian airport shells only when appropriate.",
+    "detailScope": "Detail Pechersk, Podil, Maidan/Khreshchatyk, Sophia district; include St Sophia, St Michael’s, Golden Gate, Mother Ukraine monument, Mariinsky exterior, Kyiv-Pechersk Lavra exterior where permitted, funicular, Metro bridges, river islands, and station.",
+    "buildScope": "Build Maidan–historic core and Podil hero zones, hills/funicular, church roofs, Dnipro/islands, collision, seasonal/night materials, with cultural and operational security review."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +152,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

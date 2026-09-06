@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "nassau",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,150 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-nassau-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-nassau"
+    ],
+    "imagery": [
+      "openaerialmap-nassau"
+    ],
+    "roads": [
+      "overture-2026-08-19-nassau-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-nassau-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-nassau-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -77.739719,
+        "south": 24.698906,
+        "east": -76.946401,
+        "north": 25.417554
+      },
+      "core": {
+        "west": -77.442225,
+        "south": 24.968399,
+        "east": -77.243895,
+        "north": 25.148061
+      },
+      "heroZones": [
+        {
+          "id": "downtown",
+          "west": -77.352976,
+          "south": 25.049247,
+          "east": -77.333144,
+          "north": 25.067213,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "paradise-island",
+          "west": -77.3301692,
+          "south": 25.049247,
+          "east": -77.3103372,
+          "north": 25.067213,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Downtown",
+      "Paradise Island",
+      "Cable Beach"
+    ],
+    "landmarks": [
+      "Parliament Square",
+      "Queen’s Staircase",
+      "Fort Fincastle/Charlotte",
+      "lighthouse",
+      "bridges",
+      "cruise port",
+      "straw market",
+      "resort masses where licensed",
+      "beaches",
+      "marinas"
+    ],
+    "geography": [
+      "Nassau/New Providence north shore",
+      "Paradise Island",
+      "harbor",
+      "port",
+      "airport route"
+    ],
+    "waterBodies": [
+      "Nassau/New Providence north shore",
+      "Paradise Island",
+      "harbor"
+    ],
+    "bridges": [
+      "bridges"
+    ],
+    "airports": [
+      "airport route"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ],
+    "acquireScope": "Acquire Bahamian/open terrain, bathymetry, imagery, buildings and Overture/OSM; cover Nassau/New Providence north shore, Paradise Island, harbor, port, and airport route.",
+    "detailScope": "Detail Downtown, Paradise Island, Cable Beach; include Parliament Square, Queen’s Staircase, Fort Fincastle/Charlotte, lighthouse, bridges, cruise port, straw market, resort masses where licensed, beaches, and marinas.",
+    "buildScope": "Build Downtown harbor and Paradise Island hero zones, shallow-water/bathymetric colors, reefs, bridges, boats/cruise routes, palms, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +162,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

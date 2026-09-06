@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "prague",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,150 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-prague-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-prague"
+    ],
+    "imagery": [
+      "openaerialmap-prague"
+    ],
+    "roads": [
+      "overture-2026-08-19-prague-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-prague-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-prague-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 13.860724,
+        "south": 49.728716,
+        "east": 14.980796,
+        "north": 50.447364
+      },
+      "core": {
+        "west": 14.280751,
+        "south": 49.998209,
+        "east": 14.560769,
+        "north": 50.177871
+      },
+      "heroZones": [
+        {
+          "id": "old-town",
+          "west": 14.406759,
+          "south": 50.079057,
+          "east": 14.434761,
+          "north": 50.097023,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "mala-strana",
+          "west": 14.4389613,
+          "south": 50.079057,
+          "east": 14.466963300000002,
+          "north": 50.097023,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Old Town",
+      "Malá Strana",
+      "Castle",
+      "New Town",
+      "Žižkov"
+    ],
+    "landmarks": [
+      "Charles Bridge",
+      "astronomical clock/Týn",
+      "castle/cathedral",
+      "National Museum",
+      "Dancing House",
+      "Žižkov Tower",
+      "Petrin tower/funicular",
+      "stations",
+      "trams",
+      "river islands"
+    ],
+    "geography": [
+      "historic basin",
+      "Vltava",
+      "castle ridge",
+      "outer centers",
+      "rail",
+      "airport approach"
+    ],
+    "waterBodies": [],
+    "bridges": [
+      "Charles Bridge"
+    ],
+    "airports": [
+      "airport approach"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Prague/Czech official 3D, LiDAR, terrain and orthophoto sources before Overture/OSM; cover historic basin, Vltava, castle ridge, outer centers, rail, and airport approach.",
+    "detailScope": "Detail Old Town, Malá Strana, Castle, New Town, Žižkov; include Charles Bridge, astronomical clock/Týn, castle/cathedral, National Museum, Dancing House, Žižkov Tower, Petrin tower/funicular, stations, trams, and river islands.",
+    "buildScope": "Build Old Town–Charles Bridge–Castle and Wenceslas/New Town hero corridors, roofscape/spires, steep lanes, Vltava/bridges, trams, collision, and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +162,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

@@ -3,6 +3,7 @@
   "city": "delhi",
   "phase": 168,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 168,
+    "phaseFile": "phases/PHASE_168.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/delhi/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Indian/Delhi official terrain, imagery, building, monument and municipal data with security review before Overture/OSM; cover Old/New Delhi, central NCR shell, Yamuna, Metro/rail, and airport corridor without sensitive infrastructure.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Shahjahanabad, Central Vista public exteriors, Connaught Place, Mehrauli; include India Gate, Red Fort/Qutub/Humayun’s Tomb exteriors under heritage rights, Jama Masjid exterior, Lotus Temple exterior, Parliament/Rashtrapati public exteriors as permitted, stations, Metro, and airport.",
+    "phase-specific-topology-and-experience: Assert heritage/security permissions, radial/old-city topology, monument alignment, Metro/airport, and `city:verify --city delhi`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

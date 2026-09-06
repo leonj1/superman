@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "cairo",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,149 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-cairo-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-cairo"
+    ],
+    "imagery": [
+      "openaerialmap-cairo"
+    ],
+    "roads": [
+      "overture-2026-08-19-cairo-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-cairo-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-cairo-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": 30.834496,
+        "south": 29.703306,
+        "east": 31.664844,
+        "north": 30.421954
+      },
+      "core": {
+        "west": 31.145876,
+        "south": 29.972799,
+        "east": 31.353464,
+        "north": 30.152461
+      },
+      "heroZones": [
+        {
+          "id": "downtown-tahrir",
+          "west": 31.239291,
+          "south": 30.053647,
+          "east": 31.260049,
+          "north": 30.071613,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "islamic-cairo",
+          "west": 31.2631627,
+          "south": 30.053647,
+          "east": 31.283920699999996,
+          "north": 30.071613,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Downtown/Tahrir",
+      "Islamic Cairo",
+      "Coptic Cairo",
+      "Zamalek",
+      "Giza"
+    ],
+    "landmarks": [
+      "pyramids/Sphinx under approved heritage models",
+      "Cairo Tower",
+      "Egyptian Museum exterior/current museum metadata",
+      "citadel/mosques",
+      "Khan el-Khalili streets",
+      "Nile bridges",
+      "Metro/rail",
+      "felucca routes"
+    ],
+    "geography": [
+      "historic/modern Cairo",
+      "Nile/islands",
+      "Giza pyramid plateau as a separate protected hero area",
+      "rail",
+      "airport approaches"
+    ],
+    "waterBodies": [
+      "Nile/islands"
+    ],
+    "bridges": [
+      "Nile bridges"
+    ],
+    "airports": [
+      "airport approaches"
+    ],
+    "transitModes": [
+      "roads",
+      "rail",
+      "air"
+    ],
+    "acquireScope": "Acquire Egyptian/Cairo official terrain, imagery, building and heritage model sources before Overture/OSM; cover historic/modern Cairo, Nile/islands, Giza pyramid plateau as a separate protected hero area, rail, and airport approaches.",
+    "detailScope": "Detail Downtown/Tahrir, Islamic Cairo, Coptic Cairo, Zamalek, Giza; include pyramids/Sphinx under approved heritage models, Cairo Tower, Egyptian Museum exterior/current museum metadata, citadel/mosques, Khan el-Khalili streets, Nile bridges, Metro/rail, and felucca routes.",
+    "buildScope": "Build Tahrir–Nile/Zamalek, Islamic Cairo, and Giza hero zones, desert/urban terrain, heritage review, river/islands/boats, collision, dust-safe and night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +161,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

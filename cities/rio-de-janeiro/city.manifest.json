@@ -3,6 +3,7 @@
   "city": "rio-de-janeiro",
   "phase": 192,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 192,
+    "phaseFile": "phases/PHASE_192.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/rio-de-janeiro/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Rio/Brazil official 3D/LiDAR, terrain, orthophoto, bathymetry and building data before Overture/OSM; cover Guanabara Bay, central/south zones, major mountains/forest, beaches, port, and both airport approaches.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Centro/Lapa, Copacabana/Ipanema, Urca, Santa Teresa, Maracanã; include Christ the Redeemer under approved rights, Sugarloaf cable car, Arches, cathedral, Municipal Theatre exterior, Museum of Tomorrow exterior, stadium, favelas at respectful aggregate/detail policy, beaches, ferries, and airports.",
+    "phase-specific-topology-and-experience: Assert mountain/monument/cableway silhouettes, beach/bay/airport topology, respectful community review, and `city:verify --city rio-de-janeiro`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

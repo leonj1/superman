@@ -26,8 +26,9 @@
   "memoryEvidence": null,
   "collisionEvidence": null,
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "Philadelphia geometry/LiDAR licenses and exact payload hashes are unconfirmed.",
+    "Terrain, imagery, roads, rivers, transit, vegetation, and landmark sources are not acquired.",
+    "No runtime, collision, navigation, texture, or evidence package has been built.",
+    "CDN/signing credentials, physical-GPU evidence, and two-person approvals are required."
   ]
 }

@@ -7,7 +7,11 @@
   "tilesetUrl": null,
   "content": [],
   "sourceLineage": [
-    "geonames-4887398"
+    "geonames-4887398",
+    "overture-buildings-2026-08-19.0",
+    "overture-segments-2026-08-19.0",
+    "overture-water-2026-08-19.0",
+    "chicago-parks-ej32-qgdr-2026-09-05"
   ],
   "featureCounts": null,
   "coverage": null,
@@ -16,7 +20,9 @@
   "landmarkIds": [],
   "screenshots": [],
   "attribution": [
-    "GeoNames (https://www.geonames.org/)"
+    "GeoNames (https://www.geonames.org/)",
+    "© OpenStreetMap contributors, Overture Maps Foundation",
+    "Chicago Park District"
   ],
   "performanceCertified": false,
   "certificationEvidence": null,
@@ -26,8 +32,10 @@
   "memoryEvidence": null,
   "collisionEvidence": null,
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "USGS 1 m terrain and exact NAIP source scenes have not been acquired or checksum-pinned.",
+    "Required landmark models have not passed provenance and redistribution review.",
+    "CTA data is not licensed for general game-world packaging; transit geometry requires a compatible source or written permission.",
+    "No terrain, imagery, landmark, collision, navigation, texture, or 3D Tiles package has been built.",
+    "CDN/signing credentials, physical-GPU performance evidence, and two-person license/visual approval are required."
   ]
 }

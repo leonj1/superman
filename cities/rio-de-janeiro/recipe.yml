@@ -1,35 +1,234 @@
 {
   "schemaVersion": 1,
   "city": "rio-de-janeiro",
+  "phase": 192,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      -43.572316,
+      -23.265744,
+      -42.792144,
+      -22.547096
+    ],
+    "coreBbox": [
+      -43.279751,
+      -22.996251,
+      -43.084709,
+      -22.816589
+    ],
+    "heroZones": [
+      {
+        "id": "centro-lapa-hero",
+        "name": "Centro/Lapa",
+        "bbox": [
+          -43.196127,
+          -22.910912,
+          -43.181499,
+          -22.901928
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Centro/Lapa and Copacabana–Ipanema hero zones plus Sugarloaf approach, dramatic terrain/forest, bay/ocean/ferries, rail/cable cars, collision, tropical haze and night materials."
+      },
+      {
+        "id": "copacabana-ipanema-hero",
+        "name": "Copacabana/Ipanema",
+        "bbox": [
+          -43.182961,
+          -22.910912,
+          -43.168333,
+          -22.901928
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Centro/Lapa, Copacabana/Ipanema, Urca, Santa Teresa, Maracanã; include Christ the Redeemer under approved rights, Sugarloaf cable car, Arches, cathedral, Municipal Theatre exterior, Museum of Tomorrow exterior, stadium, favelas at respectful aggregate/detail policy, beaches, ferries, and airports."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "rio-de-janeiro-official-data-discovery"
+    ],
+    "buildings": [
+      "rio-de-janeiro-landmark-model-discovery",
+      "rio-de-janeiro-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "rio-de-janeiro-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "rio-de-janeiro-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "rio-de-janeiro-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "rio-de-janeiro-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "rio-de-janeiro-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Centro/Lapa",
+      "Copacabana/Ipanema",
+      "Urca",
+      "Santa Teresa",
+      "Maracanã"
+    ],
+    "landmarks": [
+      "Christ the Redeemer under approved rights",
+      "Sugarloaf cable car",
+      "Arches",
+      "cathedral",
+      "Municipal Theatre exterior",
+      "Museum of Tomorrow exterior",
+      "stadium",
+      "favelas at respectful aggregate/detail policy",
+      "beaches",
+      "ferries",
+      "airports"
+    ],
+    "geography": [
+      "Guanabara Bay",
+      "central/south zones",
+      "major mountains/forest",
+      "beaches",
+      "port",
+      "both airport approaches"
+    ],
+    "waterBodies": [
+      "Guanabara Bay"
+    ],
+    "bridges": [],
+    "airports": [
+      "both airport approaches"
+    ],
+    "transitModes": [
+      "roads",
+      "water",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Rio/Brazil official 3D/LiDAR, terrain, orthophoto, bathymetry and building data before Overture/OSM; cover Guanabara Bay, central/south zones, major mountains/forest, beaches, port, and both airport approaches.",
+    "detail": "Detail Centro/Lapa, Copacabana/Ipanema, Urca, Santa Teresa, Maracanã; include Christ the Redeemer under approved rights, Sugarloaf cable car, Arches, cathedral, Municipal Theatre exterior, Museum of Tomorrow exterior, stadium, favelas at respectful aggregate/detail policy, beaches, ferries, and airports.",
+    "build": "Build Centro/Lapa and Copacabana–Ipanema hero zones plus Sugarloaf approach, dramatic terrain/forest, bay/ocean/ferries, rail/cable cars, collision, tropical haze and night materials.",
+    "assertion": "Assert mountain/monument/cableway silhouettes, beach/bay/airport topology, respectful community review, and `city:verify --city rio-de-janeiro`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-rio-de-janeiro-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

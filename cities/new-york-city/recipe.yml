@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "new-york-city",
+  "creationMode": "hybrid",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,166 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildingExistenceAndFootprints": [
+      "nyc-oti-building-footprints-5zhs-2jue",
+      "overture-2026-08-19-nyc-deltas"
+    ],
+    "roofGeometry": [
+      "nyc-oti-3d-citygml-2014",
+      "procedural-roof-from-current-footprint"
+    ],
+    "terrain": ["usgs-3dep-nyc-current"],
+    "imagery": [
+      "nyc-oti-orthoimagery-2024",
+      "usda-naip-new-york-current"
+    ],
+    "roadsWaterAndPublicRealm": [
+      "nyc-oti-planimetrics-roads-2022",
+      "nyc-oti-planimetrics-water-2022",
+      "nyc-oti-planimetrics-vegetation-2022",
+      "overture-2026-08-19-nyc-deltas"
+    ],
+    "transit": [
+      "mta-static-gtfs",
+      "nyc-dot-staten-island-ferry-gtfs",
+      "overture-2026-08-19-nyc-deltas"
+    ]
+  },
+  "coordinateContract": {
+    "authoritativeHorizontal": "EPSG:2263",
+    "authoritativeVertical": "NAVD88",
+    "runtime": "EPSG:4978",
+    "catalogAndExchange": "OGC:CRS84",
+    "verticalConversion": "NAVD88 to WGS84 ellipsoidal height using a pinned NOAA GEOID18 grid",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -74.48003,
+        "south": 40.354946,
+        "east": -73.53191,
+        "north": 41.073594
+      },
+      "core": {
+        "west": -74.25909,
+        "south": 40.477399,
+        "east": -73.700181,
+        "north": 40.917577
+      },
+      "heroZones": [
+        {
+          "id": "times-square-bryant-park",
+          "west": -74.0022,
+          "south": 40.7502,
+          "east": -73.979,
+          "north": 40.7609,
+          "minimumAreaSquareKm": 1
+        },
+        {
+          "id": "battery-brooklyn-bridge",
+          "west": -74.0195,
+          "south": 40.6998,
+          "east": -73.9905,
+          "north": 40.7168,
+          "minimumAreaSquareKm": 2
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "boroughs": ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"],
+    "districts": [
+      "Financial District",
+      "Midtown",
+      "Times Square",
+      "Central Park",
+      "Brooklyn Heights",
+      "DUMBO",
+      "Long Island City",
+      "Yankee Stadium",
+      "St. George"
+    ],
+    "water": [
+      "Hudson River",
+      "East River",
+      "Harlem River",
+      "Upper New York Bay"
+    ],
+    "islands": [
+      "Governors Island",
+      "Roosevelt Island",
+      "Liberty Island",
+      "Ellis Island"
+    ],
+    "bridges": [
+      "Brooklyn Bridge",
+      "Manhattan Bridge",
+      "Queensboro Bridge",
+      "Verrazzano-Narrows Bridge"
+    ],
+    "landmarks": [
+      "Statue of Liberty",
+      "Empire State Building",
+      "Chrysler Building",
+      "One World Trade Center"
+    ],
+    "airports": [
+      "John F. Kennedy International Airport",
+      "LaGuardia Airport",
+      "Newark Liberty International Airport"
+    ],
+    "systems": [
+      "roads",
+      "sidewalks",
+      "rail",
+      "subway portals",
+      "piers",
+      "ferry routes",
+      "parks",
+      "shoreline",
+      "vegetation",
+      "collision",
+      "navigation"
+    ]
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "missingRoofForms": true,
+    "facadeClasses": true,
+    "windowsAndDoorsWithinHeroZones": true,
+    "streetFurnitureWithinHeroZones": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": ["source-evidence", "license-approval", "visual-evidence", "hardware-certification"]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "reject-placeholder-footprints",
+    "assign-source-and-stable-feature-ids",
+    "transform-to-epsg-2263",
+    "correct-navd88-to-wgs84-ellipsoid",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "detect-2014-to-current-building-deltas",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-ferry-and-transit-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +178,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }

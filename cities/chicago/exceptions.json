@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "city": "chicago",
+  "generatedAt": "2026-09-05",
+  "exceptions": [
+    {
+      "id": "terrain-not-acquired",
+      "severity": "release-blocking",
+      "system": "terrain",
+      "detail": "The National Map reports 80 intersecting 1 m DEM products; the exact set has not been downloaded and checksum-pinned."
+    },
+    {
+      "id": "imagery-not-acquired",
+      "severity": "release-blocking",
+      "system": "imagery",
+      "detail": "No complete, checksum-pinned NAIP scene manifest exists, and NAIP alone is below hero-facade texture density."
+    },
+    {
+      "id": "landmarks-unlicensed",
+      "severity": "release-blocking",
+      "system": "landmarks",
+      "detail": "Required game-ready landmark models have not passed per-item provenance and redistribution review."
+    },
+    {
+      "id": "cta-license-incompatible",
+      "severity": "release-blocking",
+      "system": "transit",
+      "detail": "CTA data cannot be used for a general game-world package under its published limited-purpose license; use broadly licensed geometry or obtain written permission."
+    },
+    {
+      "id": "no-derived-artifacts",
+      "severity": "release-blocking",
+      "system": "packaging",
+      "detail": "No OGC 3D Tiles, collision, navigation, KTX2, SBOM, signature, or visual/performance evidence has been generated."
+    },
+    {
+      "id": "no-release-environment",
+      "severity": "release-blocking",
+      "system": "certification",
+      "detail": "CDN credentials, signing identity, two-person approvals, and named physical-GPU benchmark hardware are unavailable."
+    }
+  ]
+}

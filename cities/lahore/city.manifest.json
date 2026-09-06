@@ -3,6 +3,7 @@
   "city": "lahore",
   "phase": 180,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 180,
+    "phaseFile": "phases/PHASE_180.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/lahore/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Pakistan/Punjab terrain, imagery, building and heritage data with security review before Overture/OSM; cover walled city, Mall/civic corridor, canal, rail, and airport approach.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Walled City, Fort/Badshahi public exteriors, Mall, modern center; include Minar-e-Pakistan, Lahore Fort/Badshahi/Wazir Khan exteriors under heritage rights, city gates, museum exterior, GPO, station, canal, and Metro/Orange Line.",
+    "phase-specific-topology-and-experience: Assert heritage permissions, wall/gate/street topology, monument/fort alignment, transit, and `city:verify --city lahore`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

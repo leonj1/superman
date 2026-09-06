@@ -3,6 +3,7 @@
   "city": "manama",
   "phase": 142,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 142,
+    "phaseFile": "phases/PHASE_142.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/manama/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Bahrain/Manama terrain, bathymetry, imagery and building data with redistribution rights before Overture/OSM; cover Manama, Muharraq, reclaimed islands, causeways, port, and airport.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Bab Al Bahrain/souq, Diplomatic Area, waterfront, Muharraq heritage; include Bahrain World Trade Center, Financial Harbour, Grand Mosque exterior, National Museum exterior, fort, pearling-route exteriors, causeways, dhow harbor, and airport.",
+    "phase-specific-topology-and-experience: Assert island/reclamation/causeway topology, tower silhouettes, heritage-route coverage, and `city:verify --city manama`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

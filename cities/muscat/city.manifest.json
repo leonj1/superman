@@ -3,6 +3,7 @@
   "city": "muscat",
   "phase": 140,
   "status": "cataloged",
+  "creationMode": "hybrid",
   "releaseHash": null,
   "tilesetUrl": null,
   "content": [],
@@ -25,9 +26,21 @@
   "streamingEvidence": null,
   "memoryEvidence": null,
   "collisionEvidence": null,
+  "discoveryEvidence": {
+    "reviewedAt": "2026-09-05",
+    "phase": 140,
+    "phaseFile": "phases/PHASE_140.md",
+    "existingRedistributableCityModelFound": false,
+    "recipeReady": true,
+    "prerequisiteVerifier": "cities/muscat/verify-prerequisites.mjs"
+  },
   "blockers": [
-    "Approved redistributable city geometry has not been acquired.",
-    "Terrain, imagery, landmark, collision, and transit packages have not been built.",
-    "Physical-GPU performance evidence and two-person review are required."
+    "official-source-discovery: Acquire Oman/Muscat official/open high-resolution terrain, coast, imagery and building data before Overture/OSM; cover Old Muscat/Mutrah, mountain corridors, port, airport, and coastal settlements.",
+    "global-baseline-rights-and-extracts: No exact global release or bounded extract is pinned, and derivative-database obligations are not approved.",
+    "terrain-imagery-fidelity: Global fallbacks are unacquired and too coarse to certify hero terrain or facade imagery.",
+    "landmarks-and-cultural-controls: Detail Mutrah Corniche/souq, Old Muscat, opera district; include Sultan Qaboos Grand Mosque, Royal Opera exterior, Al Alam Palace exterior, Al Jalali/Mirani forts, Mutrah fort, incense burner monument, port/dhows, airport, and mountain roads.",
+    "phase-specific-topology-and-experience: Assert mountain-road grades, fort/harbor topology, mosque/royal-exterior permissions, and `city:verify --city muscat`.",
+    "package-hosting-signing: No geometry, textures, collision, navigation, 3D Tiles, signing key, CDN, rollback pointer, or public HTTP target exists.",
+    "physical-performance-and-approvals: No named physical-GPU evidence or required human license, cultural, security, and visual approvals exist."
   ]
 }

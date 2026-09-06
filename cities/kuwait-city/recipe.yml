@@ -1,35 +1,231 @@
 {
   "schemaVersion": 1,
   "city": "kuwait-city",
+  "phase": 141,
+  "creationMode": "hybrid",
+  "creationRationale": "Use an official/imported model only after exact rights and artifacts pass. Otherwise generate the baseline deterministically from approved terrain, footprints, roads, water, and land cover, then add licensed landmarks or explicitly labeled proxies.",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
-    "city-model",
-    "terrain",
-    "imagery",
+    "official-local-data",
+    "buildings",
     "roads",
     "water",
-    "vegetation"
+    "terrain",
+    "vegetation",
+    "imagery",
+    "landmark-models"
   ],
+  "coordinates": {
+    "discoveryCrs": "source-specific and mandatory",
+    "workingHorizontal": "select a locally suitable projected CRS only after source discovery",
+    "workingVertical": "source-specific orthometric datum; unresolved datum is fatal",
+    "runtimeCrs": "EPSG:4978",
+    "maximumRoundTripErrorMeters": 0.05
+  },
+  "extents": {
+    "metroBbox": [
+      47.561983,
+      29.007676,
+      48.386597,
+      29.726324
+    ],
+    "coreBbox": [
+      47.871213,
+      29.277169,
+      48.077367,
+      29.456831
+    ],
+    "heroZones": [
+      {
+        "id": "sharq-hero",
+        "name": "Sharq",
+        "bbox": [
+          47.959602,
+          29.362508,
+          47.975063,
+          29.371492
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Build Souq–waterfront and Kuwait Towers hero zones, flat desert/coast, modern/traditional facades, roads/boats, collision, dust/heat and night materials."
+      },
+      {
+        "id": "old-city-souq-hero",
+        "name": "old city/Souq",
+        "bbox": [
+          47.973517,
+          29.362508,
+          47.988978,
+          29.371492
+        ],
+        "minimumAreaSquareKilometers": 1,
+        "maximumAreaSquareKilometers": 4,
+        "scope": "Detail Sharq, old city/Souq, waterfront; include Kuwait Towers, Liberation Tower, Grand Mosque exterior, National Assembly exterior, Al Hamra, Seif Palace public exterior, dhow harbor, scientific center exterior, port, and airport."
+      }
+    ]
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodBands": {
+      "metro": [
+        0,
+        1
+      ],
+      "core": [
+        0,
+        1,
+        2
+      ],
+      "hero": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "sourcePriority": {
+    "official": [
+      "kuwait-city-official-data-discovery"
+    ],
+    "buildings": [
+      "kuwait-city-landmark-model-discovery",
+      "kuwait-city-official-data-discovery",
+      "overture-global-buildings",
+      "procedural-proxy"
+    ],
+    "terrain": [
+      "kuwait-city-official-data-discovery",
+      "copernicus-dem-glo30"
+    ],
+    "imagery": [
+      "kuwait-city-official-data-discovery",
+      "copernicus-sentinel-2-l2a"
+    ],
+    "roads": [
+      "kuwait-city-official-data-discovery",
+      "overture-global-transportation"
+    ],
+    "water": [
+      "kuwait-city-official-data-discovery",
+      "overture-global-base"
+    ],
+    "vegetation": [
+      "kuwait-city-official-data-discovery",
+      "esa-worldcover-global",
+      "procedural-biome"
+    ]
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Sharq",
+      "old city/Souq",
+      "waterfront"
+    ],
+    "landmarks": [
+      "Kuwait Towers",
+      "Liberation Tower",
+      "Grand Mosque exterior",
+      "National Assembly exterior",
+      "Al Hamra",
+      "Seif Palace public exterior",
+      "dhow harbor",
+      "scientific center exterior",
+      "port",
+      "airport"
+    ],
+    "geography": [
+      "central waterfront",
+      "old market",
+      "port",
+      "islands shell",
+      "airport",
+      "road network"
+    ],
+    "waterBodies": [
+      "central waterfront",
+      "islands shell"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ]
+  },
+  "phaseSpecificScope": {
+    "acquire": "Acquire Kuwait municipal/national terrain, coast, imagery and building data with redistribution rights before Overture/OSM; cover central waterfront, old market, port, islands shell, airport, and road network.",
+    "detail": "Detail Sharq, old city/Souq, waterfront; include Kuwait Towers, Liberation Tower, Grand Mosque exterior, National Assembly exterior, Al Hamra, Seif Palace public exterior, dhow harbor, scientific center exterior, port, and airport.",
+    "build": "Build Souq–waterfront and Kuwait Towers hero zones, flat desert/coast, modern/traditional facades, roads/boats, collision, dust/heat and night materials.",
+    "assertion": "Assert tower silhouettes, shoreline/harbor, public/sensitive exclusions, and `city:verify --city kuwait-city`."
+  },
+  "proceduralFallbacks": {
+    "buildingMassing": true,
+    "facades": true,
+    "roofForms": true,
+    "streetFurniture": true,
+    "vegetation": true,
+    "landmarkProxy": "allowed-only-when-explicitly-labeled-and-position-height-silhouette-validated",
+    "imagery": false,
+    "terrain": false,
+    "protectedOrSensitiveDetail": false
   },
   "operations": [
-    "verify-source-ledger",
+    "verify-source-ledger-and-cache-checksums",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
-    "repair-topology-and-conflate-by-priority",
+    "resolve-horizontal-and-vertical-datums",
+    "transform-to-local-working-crs-and-epsg-4978",
+    "assign-source-prefixed-stable-feature-ids",
+    "clip-metro-core-and-two-hero-zones",
+    "repair-terrain-building-road-water-topology",
+    "conflate-by-declared-feature-priority",
+    "generate-procedural-massing-roofs-and-facades",
+    "replace-proxies-with-approved-landmark-models",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
-    "compress-meshes-and-ktx2-textures",
+    "generate-independent-collision-and-navigation",
+    "compress-meshes-and-ktx2-mipmapped-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-kuwait-city-deterministic-traversals",
+    "validate-evidence-sign-and-stage-manifest"
   ],
+  "validation": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingCoverage": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumTextureAnisotropy": 8,
+    "maximumTextureDimension": 8192,
+    "minimumHeroFacadePixelsPerMeter": 64,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumGoldenSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighResolutionScale": 0.95
+  },
+  "performance": {
+    "resolution": [
+      2560,
+      1440
+    ],
+    "profile": "High",
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumReleaseOnePercentLowFps": 50,
+    "maximumFramesOver50MsRatio": 0.001,
+    "maximumConsecutiveFramesOver33Ms": 2,
+    "softwareRendererCanCertify": false,
+    "maximumMemoryDriftRatio": 0.05
+  },
   "budgets": {
     "visibleTriangles": 8000000,
     "drawCalls": 2000,

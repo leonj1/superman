@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "city": "monaco",
+  "exceptions": [
+    {
+      "id": "source-acquisition-and-license",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "Required source bytes are unacquired and local/imagery rights remain unresolved.",
+      "resolution": "Approve exact terms, download versioned artifacts, and record hashes and attribution."
+    },
+    {
+      "id": "hero-boundary-validation",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "Two hero extents are planning estimates, not authoritative survey boundaries.",
+      "resolution": "Validate against authoritative district and pedestrian-network geometry."
+    },
+    {
+      "id": "vertical-datum-and-conflation",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "Exact source CRS, vertical datums, dates, and feature conflicts are unresolved.",
+      "resolution": "Pin transformations, control errors, and every unresolved conflict."
+    },
+    {
+      "id": "landmark-assets-unacquired",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "No exact licensed model exists for phase-required landmarks.",
+      "resolution": "Acquire per-asset rights and hashes or label procedural proxies."
+    },
+    {
+      "id": "runtime-artifacts-unbuilt",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "No terrain, visual, collision, navigation, route, or attribution runtime artifacts exist.",
+      "resolution": "Run the pinned toolchain after source approval and validate every artifact hash."
+    },
+    {
+      "id": "physical-performance-certification",
+      "severity": "release-blocking",
+      "status": "open",
+      "description": "No final-content measurements exist from a named physical release GPU.",
+      "resolution": "Run protected traversal and soak suites; software rendering cannot certify release."
+    }
+  ]
+}

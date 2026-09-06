@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "city": "reykjavik",
+  "creationMode": "procedural",
   "pipelineImage": "ghcr.io/superman-world/city-pipeline:1.0.0",
   "requiredSourceRoles": [
     "city-model",
@@ -10,25 +11,150 @@
     "water",
     "vegetation"
   ],
+  "sourcePriority": {
+    "buildings": [
+      "overture-2026-08-19-reykjavik-buildings"
+    ],
+    "terrain": [
+      "copernicus-dem-glo-30-reykjavik"
+    ],
+    "imagery": [
+      "openaerialmap-reykjavik"
+    ],
+    "roads": [
+      "overture-2026-08-19-reykjavik-transportation"
+    ],
+    "water": [
+      "overture-2026-08-19-reykjavik-water"
+    ],
+    "vegetation": [
+      "overture-2026-08-19-reykjavik-land-use"
+    ]
+  },
+  "coordinateContract": {
+    "catalogAndExchange": "OGC:CRS84",
+    "runtime": "EPSG:4978",
+    "sourceCrsPolicy": "record-and-transform-with-pinned-grid",
+    "verticalDatumPolicy": "resolve every source datum and convert to WGS84 ellipsoidal height",
+    "maximumRoundTripErrorMeters": 0.02,
+    "unknownDatumPolicy": "block-source"
+  },
   "targets": {
     "metroRadiusKm": 40,
     "coreRadiusKm": 10,
     "minimumHeroZones": 2,
     "format": "3d-tiles-1.1",
-    "payload": "glTF-2.0"
+    "payload": "glTF-2.0",
+    "lodCount": 4,
+    "extents": {
+      "metro": {
+        "west": -22.719086,
+        "south": 63.776156,
+        "east": -21.071734,
+        "north": 64.494804
+      },
+      "core": {
+        "west": -22.101329,
+        "south": 64.045649,
+        "east": -21.689491,
+        "north": 64.225311
+      },
+      "heroZones": [
+        {
+          "id": "old-harbour",
+          "west": -21.916002,
+          "south": 64.126497,
+          "east": -21.874818,
+          "north": 64.144463,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        },
+        {
+          "id": "center",
+          "west": -21.8686404,
+          "south": 64.126497,
+          "east": -21.827456400000003,
+          "north": 64.144463,
+          "boundsStatus": "planning-estimate-requires-authoritative-validation"
+        }
+      ]
+    }
+  },
+  "requiredCoverage": {
+    "districts": [
+      "Old Harbour",
+      "center",
+      "waterfront",
+      "Perlan"
+    ],
+    "landmarks": [
+      "Hallgrímskirkja",
+      "Harpa",
+      "Sun Voyager",
+      "Parliament",
+      "Perlan",
+      "Höfði exterior",
+      "lighthouse",
+      "pools",
+      "port",
+      "airport",
+      "coastal paths"
+    ],
+    "geography": [
+      "center",
+      "harbor",
+      "peninsula",
+      "airport",
+      "Esja horizon",
+      "geothermal/coastal features"
+    ],
+    "waterBodies": [
+      "harbor",
+      "geothermal/coastal features"
+    ],
+    "bridges": [],
+    "airports": [
+      "airport"
+    ],
+    "transitModes": [
+      "roads",
+      "air"
+    ],
+    "acquireScope": "Acquire Iceland/Reykjavík official 3D/LiDAR, volcanic terrain and orthophoto data before Overture/OSM; cover center, harbor, peninsula, airport, Esja horizon, and geothermal/coastal features.",
+    "detailScope": "Detail Old Harbour, center, waterfront, Perlan; include Hallgrímskirkja, Harpa, Sun Voyager, Parliament, Perlan, Höfði exterior, lighthouse, pools, port, airport, and coastal paths.",
+    "buildScope": "Build Hallgrímskirkja–Harpa/harbor and Perlan hero zones, colorful facades/roofs, volcanic terrain/coast, boats, collision, snow/wet and aurora-capable night materials."
+  },
+  "proceduralFallbacks": {
+    "missingBuildingMassing": true,
+    "roofForms": true,
+    "facadeClasses": true,
+    "heroWindowsAndDoors": true,
+    "streetFurniture": true,
+    "vegetationInstances": true,
+    "landmarkPolicy": "import-exact-licensed-model-or-generate-clearly-labeled-proxy",
+    "neverGenerate": [
+      "source-evidence",
+      "license-approval",
+      "visual-evidence",
+      "hardware-certification"
+    ]
   },
   "operations": [
     "verify-source-ledger",
+    "require-human-license-acceptance",
     "download-checksum-pinned-inputs",
-    "transform-to-epsg-4978",
-    "correct-vertical-datum",
-    "clip-metro-core-and-hero-zones",
+    "assign-source-and-stable-feature-ids",
+    "resolve-and-transform-horizontal-and-vertical-datums",
+    "clip-metro-core-and-two-hero-zones",
     "repair-topology-and-conflate-by-priority",
+    "generate-building-roof-and-facade-geometry",
     "generate-lod0-lod1-lod2-lod3",
-    "generate-simplified-collision",
+    "generate-day-and-night-material-sets",
+    "generate-transit-and-water-route-graphs",
+    "generate-simplified-collision-and-navigation",
     "compress-meshes-and-ktx2-textures",
     "tile-spatially-and-write-bounding-volumes",
-    "validate-and-sign-manifest"
+    "run-data-visual-traversal-and-performance-gates",
+    "generate-sbom-notices-and-sign-manifest"
   ],
   "budgets": {
     "visibleTriangles": 8000000,
@@ -36,6 +162,35 @@
     "decodedGpuMegabytes": 1536,
     "cpuHeapMegabytes": 1024,
     "maximumTextureDimension": 8192,
-    "minimumLodCount": 3
+    "minimumLodCount": 3,
+    "minimumTextureAnisotropy": 8,
+    "minimumLandmarkPixelsPerMeter": 256,
+    "minimumHeroFacadePixelsPerMeter": 64
+  },
+  "releaseThresholds": {
+    "minimumCoreLayerCoverage": 0.995,
+    "minimumSourceBuildingRepresentation": 0.95,
+    "maximumLandmarkPositionErrorMeters": 3,
+    "maximumLandmarkHeightErrorRatio": 0.05,
+    "maximumHeroHoleSquareMeters": 20,
+    "maximumCoreHoleSquareMeters": 400,
+    "maximumCollisionPenetrationMeters": 0.05,
+    "maximumLandingErrorMeters": 0.25,
+    "minimumSsim": 0.97,
+    "maximumBlankPixelRatio": 0.005,
+    "minimumHighRenderScale": 0.95,
+    "minimumReleaseMedianFps": 60,
+    "maximumReleaseP95FrameMs": 18.2,
+    "maximumReleaseP99FrameMs": 33.3,
+    "minimumOnePercentLowFps": 50,
+    "maximumOver50MsFrameRatio": 0.001,
+    "maximumConsecutiveOver33Ms": 2,
+    "maximumWarmFirstPixelsSeconds": 1,
+    "maximumWarmHeroReadySeconds": 3,
+    "maximumColdFirstPixelsSeconds": 3,
+    "maximumColdHeroReadySeconds": 8,
+    "minimumPrefetchHitRate": 0.9,
+    "maximumLodChangedPixelRatio": 0.02,
+    "maximumMemoryDriftRatio": 0.05
   }
 }
