@@ -148,5 +148,5 @@ describe("Phase 201 portfolio gates", () => {
     expect(report.counts.total).toBe(200);
     expect(report.counts.published).toBe(0);
     expect(report.complete).toBe(false);
-  });
+  }, 15_000);
 });

@@ -4,6 +4,7 @@ import {
   Cesium3DTileset,
   Color,
   EllipsoidTerrainProvider,
+  JulianDate,
   Math as CesiumMath,
   Viewer,
   createGooglePhotorealistic3DTileset,
@@ -24,7 +25,7 @@ import { InputController } from "./InputController";
 import { QualityController } from "./QualityController";
 import { ManhattanLayer } from "./ManhattanLayer";
 import { createWorldSources, type SourceState } from "./WorldProviders";
-import { CollisionWorld, isInsideManhattanFixture } from "./CollisionWorld";
+import { CollisionWorld } from "./CollisionWorld";
 import { CityPackageLayer } from "./CityPackageLayer";
 
 export interface EngineSnapshot {
@@ -69,6 +70,11 @@ export class WorldEngine {
   private readonly collision = new CollisionWorld();
   private readonly cityPackages: CityPackageLayer;
   private attribution = "CesiumJS";
+  private baseAttribution = "CesiumJS";
+  private activeLocalOrigin: { longitude: number; latitude: number } = {
+    longitude: TIMES_SQUARE_SPAWN.longitude,
+    latitude: TIMES_SQUARE_SPAWN.latitude,
+  };
   private sources: EngineSnapshot["sources"] = {
     terrain: "loading",
     imagery: "loading",
@@ -123,6 +129,12 @@ export class WorldEngine {
       orderIndependentTranslucency: false,
     });
     this.viewer.scene.globe.baseColor = Color.fromCssColorString("#18344a");
+    this.viewer.scene.backgroundColor = Color.fromCssColorString("#79b9df");
+    this.viewer.clock.currentTime = JulianDate.fromIso8601(
+      "2026-06-21T18:00:00Z",
+    );
+    if (this.viewer.scene.skyBox) this.viewer.scene.skyBox.show = false;
+    this.viewer.scene.globe.showGroundAtmosphere = true;
     this.viewer.scene.globe.depthTestAgainstTerrain = true;
     this.viewer.scene.highDynamicRange = true;
     this.viewer.scene.postProcessStages.fxaa.enabled = true;
@@ -136,6 +148,8 @@ export class WorldEngine {
     );
     if (this.viewer.scene.skyAtmosphere) {
       this.viewer.scene.skyAtmosphere.show = options.config.quality.atmosphere;
+      this.viewer.scene.skyAtmosphere.brightnessShift = 0.06;
+      this.viewer.scene.skyAtmosphere.saturationShift = 0.05;
     }
 
     this.input = new InputController(this.viewer.canvas);
@@ -198,11 +212,16 @@ export class WorldEngine {
         this.sources.imagery = "ready";
         this.sources.buildings = sources.buildings ? "loading" : "degraded";
         this.manhattan = new ManhattanLayer(this.viewer.scene);
-        this.manhattan.load();
-        await this.collision.initialize();
+        const definition = this.manhattan.load();
+        await this.collision.initialize(
+          definition,
+          this.activeLocalOrigin.latitude,
+        );
         const local = this.manhattan.snapshot();
         this.sources.manhattan = local.visualReady ? "ready" : "loading";
         this.sources.collision = local.collisionReady ? "ready" : "loading";
+        this.baseAttribution = this.attribution;
+        this.attribution = `${this.baseAttribution} · New York procedural 3D preview`;
         this.updateReadiness();
       }
       this.animationFrame = requestAnimationFrame(this.tick);
@@ -293,7 +312,7 @@ export class WorldEngine {
     };
     this.pendingRequests = Math.max(1, this.pendingRequests);
     this.ready = this.options.config.tileProvider === "offline-fixture";
-    const local = isInsideManhattanFixture(this.state.position);
+    const local = this.isInsideLocalPreview(this.state.position);
     this.sources.manhattan = local ? "ready" : "degraded";
     this.sources.collision = local ? "ready" : "degraded";
     this.updateReadiness();
@@ -301,6 +320,48 @@ export class WorldEngine {
   }
 
   async travelToCity(city: CityCatalogEntry): Promise<void> {
+    if (
+      this.options.config.tileProvider === "offline-fixture" &&
+      this.manhattan
+    ) {
+      window.__SUPERMAN_WORLD_READY__ = false;
+      this.ready = false;
+      this.sources.manhattan = "loading";
+      this.sources.collision = "loading";
+      const isNewYork = city.slug === "new-york-city";
+      this.activeLocalOrigin = isNewYork
+        ? {
+            longitude: TIMES_SQUARE_SPAWN.longitude,
+            latitude: TIMES_SQUARE_SPAWN.latitude,
+          }
+        : { ...city.center };
+      this.manhattan.load(city);
+      this.collision.setOriginLatitude(this.activeLocalOrigin.latitude);
+      const catalogSpawn = city.spawnPoints[0];
+      this.state = {
+        position: {
+          ...this.activeLocalOrigin,
+          height: 1.7,
+        },
+        heading: isNewYork
+          ? TIMES_SQUARE_SPAWN.heading
+          : (catalogSpawn?.heading ?? 0),
+        pitch: isNewYork ? TIMES_SQUARE_SPAWN.pitch : 5,
+        roll: 0,
+        speed: 0,
+        verticalSpeed: 0,
+        mode: "walking",
+        grounded: true,
+      };
+      this.validPosition = { ...this.state.position };
+      this.sources.manhattan = "ready";
+      this.sources.collision = "ready";
+      this.ready = true;
+      this.attribution = `${this.baseAttribution} · ${city.displayName} procedural 3D preview`;
+      window.__SUPERMAN_WORLD_READY__ = true;
+      this.applyCamera();
+      return;
+    }
     const spawn = city.spawnPoints[0];
     if (!spawn) return;
     this.travelTo(spawn.longitude, spawn.latitude, spawn.altitude);
@@ -352,6 +413,9 @@ export class WorldEngine {
 
   private updateReadiness(): void {
     if (!this.providersInitialized) return;
+    const globeReady =
+      this.options.config.tileProvider === "offline-fixture" ||
+      this.globePending === 0;
     const buildingsReady =
       this.sources.buildings === "ready" ||
       this.sources.buildings === "degraded";
@@ -362,10 +426,7 @@ export class WorldEngine {
       this.sources.collision === "ready" ||
       this.sources.collision === "degraded";
     this.ready =
-      this.globePending === 0 &&
-      buildingsReady &&
-      localVisualReady &&
-      localCollisionReady;
+      globeReady && buildingsReady && localVisualReady && localCollisionReady;
   }
 
   private readonly tick = (now: number): void => {
@@ -380,7 +441,11 @@ export class WorldEngine {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     const pixelRatioScale =
       Math.min(dpr, this.options.config.quality.maximumPixelRatio) / dpr;
-    this.viewer.resolutionScale = pixelRatioScale * quality.scale;
+    const cityScale =
+      this.options.config.tileProvider === "offline-fixture"
+        ? Math.max(0.95, quality.scale)
+        : quality.scale;
+    this.viewer.resolutionScale = pixelRatioScale * cityScale;
     this.viewer.scene.postProcessStages.fxaa.enabled = quality.stage < 1;
     this.viewer.shadows =
       this.options.config.quality.shadows && quality.stage < 2;
@@ -416,7 +481,7 @@ export class WorldEngine {
       this.state =
         next.mode === "walking" &&
         this.options.config.tileProvider !== "google" &&
-        isInsideManhattanFixture(next.position)
+        this.isInsideLocalPreview(next.position)
           ? {
               ...next,
               position: this.collision.constrain(
@@ -449,7 +514,7 @@ export class WorldEngine {
         frameTimeP95Ms: quality.p95,
         renderedTiles: this.tileSet ? (this.ready ? 1 : 0) : 0,
         pendingRequests: this.pendingRequests,
-        resolutionScale: quality.scale,
+        resolutionScale: cityScale,
         readiness,
         longitude: this.state.position.longitude,
         latitude: this.state.position.latitude,
@@ -462,7 +527,7 @@ export class WorldEngine {
         cssHeight: this.viewer.canvas.clientHeight,
         worldQuality: !this.ready
           ? "loading"
-          : quality.scale < 0.999
+          : cityScale < 0.999
             ? "degraded"
             : "sharp",
       };
@@ -471,7 +536,7 @@ export class WorldEngine {
       this.options.onSnapshot({
         mode: this.state.mode,
         qualityLabel: this.ready
-          ? `${this.options.config.qualityProfileName} · ${quality.scale < 0.999 ? "adaptive detail" : "sharp"}`
+          ? `${this.options.config.qualityProfileName} · ${cityScale < 0.999 ? "adaptive detail" : "sharp"}`
           : "refining world",
         loadingMessage: this.ready
           ? ""
@@ -488,7 +553,7 @@ export class WorldEngine {
     if (this.options.config.tileProvider === "offline-fixture") {
       return {
         height: 0,
-        confidence: isInsideManhattanFixture(this.state.position) ? 1 : 0.5,
+        confidence: this.isInsideLocalPreview(this.state.position) ? 1 : 0.5,
         slopeDegrees: 0,
       };
     }
@@ -525,5 +590,15 @@ export class WorldEngine {
         roll: CesiumMath.toRadians(this.state.roll),
       },
     });
+  }
+
+  private isInsideLocalPreview(position: SimulationState["position"]): boolean {
+    const north =
+      (position.latitude - this.activeLocalOrigin.latitude) * 111_320;
+    const east =
+      (position.longitude - this.activeLocalOrigin.longitude) *
+      111_320 *
+      Math.cos(CesiumMath.toRadians(this.activeLocalOrigin.latitude));
+    return Math.abs(east) <= 950 && Math.abs(north) <= 1_200;
   }
 }

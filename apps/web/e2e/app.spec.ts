@@ -19,6 +19,42 @@ test("renders one world canvas, HUD, and attribution", async ({ page }) => {
   ).toBe(true);
 });
 
+test("renders the detailed local Midtown scene and returns to its ground spawn", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.goto("/");
+  await page.waitForFunction(
+    () =>
+      window.__SUPERMAN_WORLD_READY__ === true &&
+      (window.__SUPERMAN_NYC_SCENE__?.facadeWindows ?? 0) >= 10_000,
+  );
+  const scene = await page.evaluate(() => window.__SUPERMAN_NYC_SCENE__);
+  expect(scene).toMatchObject({
+    ready: true,
+    landmarks: 4,
+  });
+  expect(scene?.buildings).toBeGreaterThanOrEqual(100);
+  expect(scene?.signs).toBeGreaterThanOrEqual(10);
+  await page.getByRole("button", { name: "Chicago" }).click();
+  await page.waitForFunction(
+    () => (window.__SUPERMAN_METRICS__?.longitude ?? 0) < -87,
+  );
+  await page
+    .getByRole("button", { name: "New York City" })
+    .click({ force: true });
+  await page.waitForFunction(
+    () =>
+      Math.abs((window.__SUPERMAN_METRICS__?.longitude ?? 0) + 73.9855) <
+      0.0001,
+  );
+  expect(
+    await page.evaluate(
+      () => window.__SUPERMAN_METRICS__?.resolutionScale ?? 0,
+    ),
+  ).toBeGreaterThanOrEqual(0.95);
+});
+
 test("@a11y controls are keyboard reachable and reduced motion is supported", async ({
   page,
 }) => {
@@ -48,8 +84,78 @@ test("loads all 200 city targets and travels to a searched city", async ({
   await page.getByRole("button", { name: /Cape Town/ }).click();
   await expect(page.getByText("Cape Town", { exact: true })).toBeVisible();
   await page.waitForFunction(
-    () => (window.__SUPERMAN_METRICS__?.latitude ?? 0) < -33,
+    () =>
+      (window.__SUPERMAN_METRICS__?.latitude ?? 0) < -33 &&
+      window.__SUPERMAN_CITY_SCENE__?.slug === "cape-town" &&
+      window.__SUPERMAN_CITY_SCENE__.ready,
   );
+  expect(
+    await page.evaluate(() => window.__SUPERMAN_CITY_SCENE__?.buildings ?? 0),
+  ).toBeGreaterThanOrEqual(70);
+});
+
+test("renders dense local scenes across global city profiles", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const browserErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+  await page.goto("/");
+  await page.waitForFunction(
+    () =>
+      window.__SUPERMAN_CITY_COUNT__ === 200 &&
+      typeof window.__SUPERMAN_VISIT_CITY__ === "function" &&
+      window.__SUPERMAN_WORLD_READY__ === true,
+  );
+  const audit = await page.evaluate(async () => {
+    const response = await fetch("/cities/catalog.json");
+    const catalog = (await response.json()) as {
+      cities: Array<{
+        slug: string;
+        center: { longitude: number; latitude: number };
+      }>;
+    };
+    const failures: string[] = [];
+    const sample = new Set([
+      "new-york-city",
+      "chicago",
+      "honolulu",
+      "london",
+      "monaco",
+      "cape-town",
+      "tokyo",
+      "cusco",
+    ]);
+    const sampledCities = catalog.cities.filter(({ slug }) => sample.has(slug));
+    for (const city of sampledCities) {
+      await window.__SUPERMAN_VISIT_CITY__?.(city.slug);
+      await new Promise<void>((resolve) => setTimeout(resolve, 260));
+      const scene = window.__SUPERMAN_CITY_SCENE__;
+      const metrics = window.__SUPERMAN_METRICS__;
+      const positioned =
+        city.slug === "new-york-city" ||
+        (!!metrics &&
+          Math.abs(metrics.longitude - city.center.longitude) <= 0.02 &&
+          Math.abs(metrics.latitude - city.center.latitude) <= 0.02);
+      if (
+        !scene?.ready ||
+        scene.slug !== city.slug ||
+        scene.buildings < 70 ||
+        scene.facadeWindows < 1_500 ||
+        scene.landmarks !== 4 ||
+        !positioned ||
+        !metrics ||
+        metrics.altitude > 3
+      ) {
+        failures.push(city.slug);
+      }
+    }
+    return { checked: sampledCities.length, failures };
+  });
+  expect(audit).toEqual({ checked: 8, failures: [] });
+  expect(browserErrors).toEqual([]);
 });
 
 test("@visual globe shell remains stable", async ({ page }) => {
@@ -70,7 +176,7 @@ test("@visual @image-quality renders textured geometry without blank or blocky o
   browser,
   baseURL,
 }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   const context = await browser.newContext({
     viewport: { width: 640, height: 360 },
     deviceScaleFactor: 1,

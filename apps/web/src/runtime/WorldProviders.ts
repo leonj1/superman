@@ -54,7 +54,7 @@ export async function createWorldSources(
     terrain: new EllipsoidTerrainProvider(),
     imagery,
     attribution:
-      "CesiumJS Natural Earth II · procedural Manhattan demonstration (not survey accurate)",
+      "CesiumJS Natural Earth II · local procedural city previews (not survey accurate)",
     state: "loading",
   };
 }

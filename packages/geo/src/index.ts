@@ -127,7 +127,7 @@ export function radiansToDegrees(value: number): number {
 export const TIMES_SQUARE_SPAWN = {
   longitude: -73.9855,
   latitude: 40.758,
-  height: 32,
-  heading: 210,
-  pitch: -8,
+  height: 1.7,
+  heading: 185,
+  pitch: 7,
 } as const;

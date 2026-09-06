@@ -156,6 +156,18 @@ function World({
     void engineRef.current?.travelToCity(city);
   };
 
+  useEffect(() => {
+    window.__SUPERMAN_VISIT_CITY__ = async (slug: string) => {
+      const city = cities.find((candidate) => candidate.slug === slug);
+      if (!city) throw new Error(`Unknown city: ${slug}`);
+      setActiveCity(city.displayName);
+      await engineRef.current?.travelToCity(city);
+    };
+    return () => {
+      window.__SUPERMAN_VISIT_CITY__ = undefined;
+    };
+  }, [cities]);
+
   const visibleCities = searchCities(cities, cityQuery);
   const featuredCities = FEATURED_CITY_SLUGS.map((slug) =>
     cities.find((city) => city.slug === slug),
@@ -279,6 +291,13 @@ function World({
       <div className="active-city" aria-live="polite">
         <small>CITY TARGET</small>
         <strong>{activeCity}</strong>
+        {config.tileProvider === "offline-fixture" && (
+          <span>
+            {activeCity === "New York City"
+              ? "LOCAL 3D · MIDTOWN / TIMES SQUARE"
+              : "PROCEDURAL 3D PREVIEW · CATALOG-DRIVEN"}
+          </span>
+        )}
       </div>
 
       {controlsOpen && (
@@ -365,7 +384,7 @@ function World({
             <span>
               {config.tileProvider === "hybrid"
                 ? "Live terrain + OSM buildings enabled"
-                : "Offline mode: location previews only"}
+                : "Offline mode: local procedural 3D previews"}
             </span>
           </div>
           {cityCatalogError ? (
@@ -383,9 +402,13 @@ function World({
                     <small>{city.country}</small>
                   </span>
                   <em>
-                    {city.package.releaseAvailable
-                      ? "3D READY"
-                      : `PHASE ${city.phase}`}
+                    {config.tileProvider === "offline-fixture"
+                      ? city.slug === "new-york-city"
+                        ? "LOCAL 3D+"
+                        : "LOCAL 3D"
+                      : city.package.releaseAvailable
+                        ? "3D READY"
+                        : `PHASE ${city.phase}`}
                   </em>
                 </button>
               ))}

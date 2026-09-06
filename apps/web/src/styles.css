@@ -482,6 +482,14 @@ kbd {
 .active-city strong {
   font-size: 11px;
 }
+.active-city span {
+  display: block;
+  margin-top: 7px;
+  color: #7fd7ff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
 .controls-card h2 {
   margin: 0 0 18px;
   font-size: 18px;
